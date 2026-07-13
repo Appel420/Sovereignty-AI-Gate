@@ -2,7 +2,7 @@
  * threat_feed.js — Local, offline threat indicator registry.
  *
  * Threat data is loaded from local signed bundles only.
- * No network calls. No Math.random().
+ * No network calls. No nondeterministic randomness.
  */
 
 "use strict";

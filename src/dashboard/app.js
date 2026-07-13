@@ -1,7 +1,7 @@
 /**
  * app.js — Sovereignty AI Gate Dashboard application.
  *
- * Offline-first. No framework. No Math.random().
+ * Offline-first. No framework. No nondeterministic randomness.
  * All entropy via crypto.getRandomValues() or deterministic hashing.
  */
 
