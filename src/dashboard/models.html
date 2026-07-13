@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sovereignty AI Gate — Models</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <h1>Sovereignty AI Gate</h1>
+    <p class="subtitle">Model Boundaries &amp; Delegation</p>
+  </header>
+
+  <nav>
+    <a href="index.html">Dashboard</a>
+    <a href="models.html" class="active">Models</a>
+  </nav>
+
+  <main>
+    <section class="card" id="models-panel">
+      <h2>Registered Models</h2>
+      <ul id="models-list"></ul>
+    </section>
+
+    <section class="card" id="delegations-panel">
+      <h2>Active Delegations</h2>
+      <table id="delegations-table">
+        <thead>
+          <tr>
+            <th>Token ID</th>
+            <th>Grantor</th>
+            <th>Grantee</th>
+            <th>Scope</th>
+            <th>Expires</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="delegations-body"></tbody>
+      </table>
+    </section>
+  </main>
+
+  <footer>
+    <span>Offline-first · No external calls</span>
+  </footer>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

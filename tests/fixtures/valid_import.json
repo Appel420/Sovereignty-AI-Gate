@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0",
+  "bundle_id": "import-001",
+  "created_by": "user:bob",
+  "created_at": "2026-01-01T00:00:00+00:00",
+  "imported_at": "2026-01-02T00:00:00+00:00",
+  "payload": {
+    "boundaries": [],
+    "version": "0.1.0"
+  },
+  "payload_hash": "14c0a7ff623cefb2c792db5d9f294e04c0203e0e9fc4739d2b9d2d5348fb4634",
+  "signature": "deadbeef0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+}

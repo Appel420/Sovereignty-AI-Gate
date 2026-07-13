@@ -1,0 +1,18 @@
+{
+  "tpm_pcr_values": {
+    "pcr0": "0000000000000000000000000000000000000000000000000000000000000000",
+    "pcr1": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "authority_state_hash": "abc123",
+  "compliance_status": {
+    "rfc0000": "pass",
+    "rfc0013": "pass",
+    "rfc0014": "pass",
+    "rfc0015": "pass",
+    "rfc0016": "pass",
+    "rfc0017": "pass",
+    "rfc0018": "pass",
+    "rfc0019": "pass"
+  },
+  "deterministic": true
+}

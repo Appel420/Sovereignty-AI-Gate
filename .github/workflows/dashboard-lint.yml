@@ -1,0 +1,42 @@
+name: Dashboard Lint
+
+on:
+  push:
+    branches: ["main", "copilot/**", "feature/**"]
+    paths:
+      - "src/dashboard/**"
+      - "tests/dashboard/**"
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "src/dashboard/**"
+      - "tests/dashboard/**"
+
+permissions:
+  contents: read
+
+jobs:
+  no-math-random:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Install npm dependencies
+        run: npm install
+
+      - name: Check no Math.random() in dashboard JS
+        run: node --experimental-vm-modules tests/dashboard/test_no_math_random.js
+
+      - name: Grep check for Math.random
+        run: |
+          if grep -rn "Math\.random" src/dashboard/; then
+            echo "ERROR: Math.random() found in dashboard source files"
+            exit 1
+          fi
+          echo "OK: No Math.random() found in dashboard source files"

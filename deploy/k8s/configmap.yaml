@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sia-config
+  labels:
+    app: sia-dashboard
+data:
+  SIA_OFFLINE: "1"
+  SIA_VERSION: "0.1.0"
