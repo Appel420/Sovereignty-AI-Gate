@@ -1,79 +1,46 @@
 """
 Conformance: harness.
-
-The ConformanceHarness runs registered assertion callables and
-accumulates EvidenceRecord results.
 """
 from __future__ import annotations
 
 import uuid
 from collections.abc import Callable
-from datetime import datetime, timezone
 from typing import Any
 
 from sia.conformance.evidence import EvidenceRecord
 from sia.errors.exceptions import ConformanceAssertionError
 
-
 AssertionFn = Callable[[], dict[str, Any] | None]
 
 
 class ConformanceHarness:
-    """
-    Runs conformance assertions and collects evidence.
-
-    Usage::
-
-        harness = ConformanceHarness()
-
-        @harness.register("RFC-0014", "MEM-001")
-        def check_memory_schema():
-            # raise ConformanceAssertionError on failure
-            pass
-
-        results = harness.run_all()
-    """
-
     def __init__(self) -> None:
         self._assertions: list[tuple[str, str, AssertionFn]] = []
         self._evidence: list[EvidenceRecord] = []
 
-    # ── Registration ──────────────────────────────────────────────────────────
-
-    def register(
-        self, rfc: str, assertion_id: str
-    ) -> Callable[[AssertionFn], AssertionFn]:
-        """Decorator that registers an assertion function."""
+    def register(self, rfc: str, assertion_id: str) -> Callable[[AssertionFn], AssertionFn]:
         def decorator(fn: AssertionFn) -> AssertionFn:
             self._assertions.append((rfc, assertion_id, fn))
             return fn
         return decorator
 
     def add(self, rfc: str, assertion_id: str, fn: AssertionFn) -> None:
-        """Programmatically add an assertion."""
         self._assertions.append((rfc, assertion_id, fn))
 
-    # ── Execution ─────────────────────────────────────────────────────────────
-
     def run_all(self) -> list[EvidenceRecord]:
-        """Run all registered assertions and return evidence records."""
         self._evidence.clear()
         for rfc, assertion_id, fn in self._assertions:
             self._run_one(rfc, assertion_id, fn)
         return list(self._evidence)
 
     def run_rfc(self, rfc: str) -> list[EvidenceRecord]:
-        """Run only the assertions for a specific RFC."""
         results: list[EvidenceRecord] = []
         for r, assertion_id, fn in self._assertions:
             if r == rfc:
-                record = self._run_one(r, assertion_id, fn)
-                results.append(record)
+                results.append(self._run_one(r, assertion_id, fn))
         return results
 
-    def _run_one(
-        self, rfc: str, assertion_id: str, fn: AssertionFn
-    ) -> EvidenceRecord:
+    def _run_one(self, rfc: str, assertion_id: str, fn: AssertionFn) -> EvidenceRecord:
         evidence_id = str(uuid.uuid4())
         try:
             details = fn() or {}
@@ -102,8 +69,6 @@ class ConformanceHarness:
             )
         self._evidence.append(record)
         return record
-
-    # ── Results ───────────────────────────────────────────────────────────────
 
     @property
     def evidence(self) -> list[EvidenceRecord]:

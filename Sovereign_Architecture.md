@@ -2,82 +2,49 @@
 
 ## Overview
 
-The Sovereignty AI Gate (SIA) is composed of five interconnected layers:
+Sovereignty AI Gate (SIA) is a deterministic authority framework built on a strict separation between representation, evidence, and authority.
 
-```
-┌─────────────────────────────────────────────┐
-│              User / Operator                │
-├─────────────────────────────────────────────┤
-│         Authority & Policy Engine           │
-│  (identity, delegation, boundary registry)  │
-├─────────────────────────────────────────────┤
-│       Conformance & Evidence Layer          │
-│  (RFC harness, proof-of-compliance records) │
-├─────────────────────────────────────────────┤
-│    Memory / Import / Export / Audit         │
-│  (encrypted memory, ledger, data lifecycle) │
-├─────────────────────────────────────────────┤
-│         Deterministic Dashboard             │
-│  (TPM sealing, signatures, compliance UI)   │
-└─────────────────────────────────────────────┘
-```
+## Frozen Authority Model
 
-## Layer Descriptions
+### Representation
+May transform, encode, decode, normalize, transport, hash, and validate structure.
+Must not mint authority.
 
-### 1. Authority & Policy Engine (`src/sia/authority.py`, `src/sia/security/`)
+### Evidence
+May record that an event occurred.
+Must not create trust.
 
-- Manages sovereign identity for users and AI models.
-- Enforces boundary policies defined per model.
-- Maintains the boundary registry (which models are active, their scope, their constraints).
-- Implements the no-conversion authority rule: a model's creator boundary cannot be changed
-  by any delegation chain.
+### Authority
+May only be created by a registered canonical boundary creator.
+Must use exact type identity.
+Must have explicit RFC ownership and explicit rejection semantics.
 
-### 2. Conformance & Evidence Layer (`src/sia/conformance/`)
+## Registry Governance
 
-- Runs RFC-numbered conformance tests against running instances.
-- Records cryptographically-signed evidence objects for each conformance assertion.
-- Evidence is stored locally and can be exported as a conformance bundle.
+Canonical authority types are registered in a sealed manifest.
+Transformers and creators are disjoint.
+A transformer must never emit a canonical authority type.
+A subclass must never be treated as equivalent authority.
 
-### 3. Memory / Import / Export / Audit (`src/sia/memory/`, `src/sia/imports/`, `src/sia/export/`, `src/sia/audit/`)
+## RFC Chain
 
-- **Memory**: per-model encrypted memory store. Cross-model sharing requires user consent.
-- **Import**: loads external authority bundles with full validation.
-- **Export**: produces signed, portable authority bundles.
-- **Audit**: append-only ledger recording every authority event with SHA-256 chained hashes.
+- RFC-0000: Core principles
+- RFC-0001 through RFC-0010: execution and authority pipeline
+- RFC-0013: root trust boundary
+- RFC-0014: sovereign memory authority
+- RFC-0015: delegated access control
+- RFC-0016: conformance harness
+- RFC-0017: audit ledger
+- RFC-0018: external export contract
+- RFC-0019: import / rehydration verification
+- RFC-0020: cross-system compatibility profile
 
-### 4. Delegation (`src/sia/delegation/`)
+## Deterministic Dashboard
 
-- Allows a user to delegate a subset of authority to an AI model or sub-process.
-- Delegation chains are bounded: a delegate cannot grant more than they received.
-- All delegations expire unless renewed; renewal requires re-confirmation.
+The dashboard must remain free of randomized behavior. All validation, scan, and compliance flows must be reproducible.
 
-### 5. Deterministic Dashboard (`src/dashboard/`)
+## Import and Export Rules
 
-- Pure HTML/JS/CSS — no framework dependencies, no build toolchain required.
-- All random values come from `crypto.getRandomValues()` or TPM-backed sources.
-- `Math.random()` is explicitly forbidden and detected by the lint rule.
-- The dashboard displays live authority state, audit tail, and conformance status.
-
-## Trust Hierarchy
-
-```
-User Root Key (hardware-backed where available)
-  └─ Model Boundary Certificate
-       └─ Delegation Token (scoped, time-limited)
-            └─ Action Authorization Record
-                 └─ Audit Ledger Entry (chained hash)
-```
-
-## Offline Operation
-
-All components run without network access. The authority engine, memory store, and dashboard
-serve from localhost. External interoperability (e.g., sharing a conformance bundle with
-another operator) uses signed, exportable bundles transported out-of-band.
-
-## Deployment Modes
-
-| Mode | Description |
-|------|-------------|
-| `local` | Single-user, single-machine. All state on device. |
-| `self-hosted` | LAN or VPN deployment. Shared authority server. |
-| `federated` | Multiple independent operators with cross-signed root certificates. |
+Import produces evidence-only reconstructed state.
+Export produces canonical portable evidence.
+Neither side may silently create authority.

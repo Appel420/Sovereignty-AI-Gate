@@ -1,19 +1,24 @@
 """
 Security: authority policy engine.
 
-Policies are evaluated before any action is executed. The engine
-accepts a policy definition dict and evaluates a request against it,
-returning an allow/deny decision with an audit trail.
+This module enforces the frozen authority boundary model.
+Representation and transformation may proceed, but canonical authority
+objects may only be minted by registered boundaries.
 """
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Callable
 
-from sia.errors.exceptions import PolicyDeniedError
+from sia.errors.exceptions import AuthorityFailure, PolicyDeniedError
+from sia.security.boundary_registry import (
+    CANONICAL_BOUNDARIES,
+    ensure_boundary_registry_is_canonical,
+    find_creator_for_type,
+)
 
 
-@dataclass
+@dataclass(frozen=True)
 class PolicyDecision:
     allowed: bool
     reason: str
@@ -21,39 +26,11 @@ class PolicyDecision:
 
 
 class AuthorityPolicy:
-    """
-    Evaluates authority policy rules for a given context.
-
-    Policy format (dict)::
-
-        {
-          "default": "deny",          # or "allow"
-          "rules": [
-            {
-              "id": "r001",
-              "match": {"action": "memory.read", "model_id": "*"},
-              "effect": "allow"
-            }
-          ]
-        }
-
-    Rules are evaluated in order; the first match wins. If no rule
-    matches, the default effect is applied.
-    """
-
     def __init__(self, policy: dict[str, Any]) -> None:
         self._default: str = policy.get("default", "deny")
         self._rules: list[dict[str, Any]] = policy.get("rules", [])
 
-    # ── Evaluation ────────────────────────────────────────────────────────────
-
     def evaluate(self, request: dict[str, Any]) -> PolicyDecision:
-        """
-        Evaluate *request* against this policy.
-
-        Returns a :class:`PolicyDecision`. Does **not** raise on deny;
-        callers that want an exception should call :meth:`enforce`.
-        """
         for rule in self._rules:
             if self._matches(rule.get("match", {}), request):
                 effect = rule.get("effect", "deny")
@@ -62,24 +39,18 @@ class AuthorityPolicy:
                     reason=f"Matched rule '{rule.get('id', '?')}'",
                     matched_rule=rule.get("id"),
                 )
-        allowed = self._default == "allow"
         return PolicyDecision(
-            allowed=allowed,
+            allowed=self._default == "allow",
             reason=f"No matching rule; default is '{self._default}'",
         )
 
     def enforce(self, request: dict[str, Any]) -> None:
-        """Evaluate *request* and raise :exc:`PolicyDeniedError` if denied."""
         decision = self.evaluate(request)
         if not decision.allowed:
             raise PolicyDeniedError(decision.reason)
 
-    # ── Internal helpers ──────────────────────────────────────────────────────
-
     @staticmethod
     def _matches(pattern: dict[str, Any], request: dict[str, Any]) -> bool:
-        """Return True if all pattern fields match the corresponding
-        request fields. ``"*"`` is a wildcard that matches anything."""
         for key, value in pattern.items():
             if value == "*":
                 continue
@@ -87,7 +58,20 @@ class AuthorityPolicy:
                 return False
         return True
 
-    # ── Serialization ─────────────────────────────────────────────────────────
-
     def to_dict(self) -> dict[str, Any]:
         return {"default": self._default, "rules": list(self._rules)}
+
+
+def enforce_authority_creation_path(converter: Callable[[], object], *, rfc: str) -> object:
+    ensure_boundary_registry_is_canonical()
+    result = converter()
+    boundary = find_creator_for_type(type(result))
+    if boundary is None:
+        return result
+    raise AuthorityFailure(
+        rfc=rfc,
+        code="sia.error.unregistered_authority_creation",
+        message=(
+            f"{type(result).__name__} was produced outside {boundary.creator_rfc}"
+        ),
+    )
