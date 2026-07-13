@@ -1,2 +1,13 @@
-# Sovereignty-AI-Gate
-Sovereignty AI Gate is a user-rooted authority framework that verifies identity, permissions, memory, and AI actions through deterministic trust boundaries. It enables secure, auditable, provider-independent intelligence with explicit control over access, delegation, evidence, and data ownership.
+# Sovereignty AI Gate
+
+## Provider policy
+
+This repository is offline-first and provider-neutral in implementation. Dashboard configuration, documentation, and test fixtures must not hard-code vendor model lists or promotional provider catalogs.
+
+## Deterministic behavior
+
+All dashboard behaviors must be deterministic. Randomized outcomes, provider selection drift, and implicit external calls are prohibited.
+
+## Local-only operation
+
+The dashboard and supporting utilities are intended to operate from local files and signed bundles only.
