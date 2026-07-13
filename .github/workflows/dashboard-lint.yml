@@ -12,6 +12,9 @@ on:
       - "src/dashboard/**"
       - "tests/dashboard/**"
 
+permissions:
+  contents: read
+
 jobs:
   no-math-random:
     runs-on: ubuntu-latest
