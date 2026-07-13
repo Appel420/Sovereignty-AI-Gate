@@ -1,0 +1,25 @@
+version: "3.9"
+
+services:
+  sia-dashboard:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile
+    image: sovereignty-ai-gate:latest
+    container_name: sia_dashboard
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - SIA_OFFLINE=1
+    volumes:
+      - sia_state:/app/state
+
+volumes:
+  sia_state:
+    driver: local

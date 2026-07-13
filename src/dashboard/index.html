@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sovereignty AI Gate — Dashboard</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <h1>Sovereignty AI Gate</h1>
+    <p class="subtitle">User-Rooted Authority &amp; Deterministic Trust</p>
+  </header>
+
+  <nav>
+    <a href="index.html" class="active">Dashboard</a>
+    <a href="models.html">Models</a>
+  </nav>
+
+  <main>
+    <section class="card" id="authority-status">
+      <h2>Authority Status</h2>
+      <div id="status-indicator" class="status-indicator pending">Initializing…</div>
+    </section>
+
+    <section class="card" id="compliance-panel">
+      <h2>RFC Compliance</h2>
+      <table id="compliance-table">
+        <thead>
+          <tr><th>RFC</th><th>Status</th><th>Last Check</th></tr>
+        </thead>
+        <tbody id="compliance-body"></tbody>
+      </table>
+    </section>
+
+    <section class="card" id="audit-panel">
+      <h2>Audit Ledger (last 20 entries)</h2>
+      <ol id="audit-list" class="audit-list" reversed></ol>
+    </section>
+
+    <section class="card" id="boundaries-panel">
+      <h2>Active Boundaries</h2>
+      <ul id="boundaries-list"></ul>
+    </section>
+  </main>
+
+  <footer>
+    <span id="state-hash" title="Deterministic state hash"></span>
+    <span>Offline-first · No external calls</span>
+  </footer>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

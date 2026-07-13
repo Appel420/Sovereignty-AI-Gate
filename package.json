@@ -1,0 +1,17 @@
+{
+  "name": "sovereignty-ai-gate-dashboard",
+  "version": "0.1.0",
+  "description": "Sovereignty AI Gate deterministic dashboard",
+  "private": true,
+  "scripts": {
+    "lint": "eslint src/dashboard/**/*.js tests/dashboard/**/*.js",
+    "test": "node --test tests/dashboard/test_no_math_random.js",
+    "lint:fix": "eslint --fix src/dashboard/**/*.js"
+  },
+  "devDependencies": {
+    "eslint": "^9.0.0"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  }
+}
