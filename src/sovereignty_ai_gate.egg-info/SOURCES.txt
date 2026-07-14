@@ -3,6 +3,8 @@ README.md
 pyproject.toml
 src/sia/__init__.py
 src/sia/authority.py
+src/sia/authority_adapters.py
+src/sia/authority_gate.py
 src/sia/audit/__init__.py
 src/sia/audit/ledger.py
 src/sia/audit/recorder.py
@@ -47,6 +49,7 @@ src/sovereignty_core/__init__.py
 src/sovereignty_core/audit/__init__.py
 src/sovereignty_core/audit/ledger.py
 src/sovereignty_core/audit/merkle.py
+src/sovereignty_core/audit/scar.py
 src/sovereignty_core/identity/__init__.py
 src/sovereignty_core/identity/identity.py
 src/sovereignty_core/identity/root_of_trust.py
