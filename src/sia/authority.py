@@ -365,6 +365,12 @@ class SovereignAuthority:
         record_ids: Sequence[str] = (),
     ) -> tuple[AuthorizationDecision, dict[str, Any] | None]:
         self._require_initialized()
+        if request.provider_id != provider.provider_id:
+            raise ValueError(
+                f"Request provider_id {request.provider_id!r} does not match "
+                f"the provider being executed ({provider.provider_id!r}). "
+                "Build the OperationRequest with the same provider_id."
+            )
         decision = self.authorize_operation(request)
         if not decision.allowed:
             return decision, None
