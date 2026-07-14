@@ -5,4 +5,4 @@ This package contains provider-independent trust, identity, permission,
 consent, and memory-chain primitives.
 """
 
-__all__ = ["identity", "permissions", "vault"]
+__all__ = ["audit", "identity", "permissions", "vault"]
