@@ -28,6 +28,9 @@ src/sia/memory/validator.py
 src/sia/security/__init__.py
 src/sia/security/authority_policy.py
 src/sia/security/boundary_registry.py
+src/sia/tools/executor.py
+src/sia/tools/models.py
+src/sia/tools/registry.py
 src/sia/utils/__init__.py
 src/sia/utils/canonical.py
 src/sia/utils/hashing.py
@@ -37,4 +40,14 @@ src/sovereignty_ai_gate.egg-info/SOURCES.txt
 src/sovereignty_ai_gate.egg-info/dependency_links.txt
 src/sovereignty_ai_gate.egg-info/requires.txt
 src/sovereignty_ai_gate.egg-info/top_level.txt
+src/sovereignty_core/__init__.py
+src/sovereignty_core/identity/__init__.py
+src/sovereignty_core/identity/identity.py
+src/sovereignty_core/identity/root_of_trust.py
+src/sovereignty_core/permissions/__init__.py
+src/sovereignty_core/permissions/capability.py
+src/sovereignty_core/permissions/consent.py
+src/sovereignty_core/vault/__init__.py
+src/sovereignty_core/vault/memory_chain.py
 tests/test_smoke.py
+tests/test_tools_runtime.py

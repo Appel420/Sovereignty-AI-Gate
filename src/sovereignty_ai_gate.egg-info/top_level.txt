@@ -1,2 +1,3 @@
 dashboard
 sia
+sovereignty_core

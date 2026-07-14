@@ -22,6 +22,19 @@ class SIAError(Exception):
         return f"[{self.code}] {self.message}"
 
 
+class AuthorityFailure(SIAError):
+    """Low-level authority enforcement failure, optionally RFC-scoped."""
+
+    def __init__(
+        self,
+        code: str = codes.E_UNKNOWN,
+        message: str | None = None,
+        rfc: str | None = None,
+    ) -> None:
+        self.rfc = rfc
+        super().__init__(code, message)
+
+
 # ── Authority ──────────────────────────────────────────────────────────────────
 
 class NotInitializedError(SIAError):

@@ -38,3 +38,43 @@ class ImportedLedger:
             records=tuple(data["records"]),
             schema_version=data.get("schema_version", IMPORT_SCHEMA_VERSION),
         )
+
+
+@dataclass(frozen=True)
+class ImportBundle:
+    """RFC-0019 canonical import bundle.
+
+    Carries an opaque payload, its hash, and a signature.  Validation
+    is intentionally kept separate (see ``sia.imports.validator``).
+    """
+
+    bundle_id: str
+    created_by: str
+    payload: Any
+    payload_hash: str
+    signature: str
+    created_at: str
+    schema_version: str = IMPORT_SCHEMA_VERSION
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "schema_version": self.schema_version,
+            "bundle_id": self.bundle_id,
+            "created_by": self.created_by,
+            "created_at": self.created_at,
+            "payload": self.payload,
+            "payload_hash": self.payload_hash,
+            "signature": self.signature,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "ImportBundle":
+        return cls(
+            bundle_id=data["bundle_id"],
+            created_by=data["created_by"],
+            payload=data["payload"],
+            payload_hash=data["payload_hash"],
+            signature=data["signature"],
+            created_at=data["created_at"],
+            schema_version=data.get("schema_version", IMPORT_SCHEMA_VERSION),
+        )
