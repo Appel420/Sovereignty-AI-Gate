@@ -47,6 +47,7 @@ src/sovereignty_core/__init__.py
 src/sovereignty_core/audit/__init__.py
 src/sovereignty_core/audit/ledger.py
 src/sovereignty_core/audit/merkle.py
+src/sovereignty_core/audit/scar.py
 src/sovereignty_core/identity/__init__.py
 src/sovereignty_core/identity/identity.py
 src/sovereignty_core/identity/root_of_trust.py
@@ -55,5 +56,7 @@ src/sovereignty_core/permissions/capability.py
 src/sovereignty_core/permissions/consent.py
 src/sovereignty_core/vault/__init__.py
 src/sovereignty_core/vault/memory_chain.py
+tests/test_deployment_ports.py
+tests/test_mcp_server.py
 tests/test_smoke.py
 tests/test_tools_runtime.py
