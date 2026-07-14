@@ -7,6 +7,22 @@ import/export of signed authority bundles.
 """
 
 from sia.authority import SovereignAuthority
+from sia.authority_gate import (
+    AuthorizationDecision,
+    AuthorizedContextPacket,
+    IdentityContext,
+    LocalMockProvider,
+    OperationRequest,
+    ProtectedOperation,
+)
 
-__all__ = ["SovereignAuthority"]
+__all__ = [
+    "AuthorizationDecision",
+    "AuthorizedContextPacket",
+    "IdentityContext",
+    "LocalMockProvider",
+    "OperationRequest",
+    "ProtectedOperation",
+    "SovereignAuthority",
+]
 __version__ = "0.1.0"
