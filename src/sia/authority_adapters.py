@@ -344,6 +344,7 @@ class DefaultMemoryFirewall(MemoryFirewall):
     def _sanitize_memory_records(
         memory_records: Sequence[Any],
     ) -> Iterable[dict[str, Any]]:
+        _SAFE_FIELDS = ("record_id", "model_id", "content")
         for record in memory_records:
             if isinstance(record, MemoryRecord):
                 yield {
@@ -351,5 +352,7 @@ class DefaultMemoryFirewall(MemoryFirewall):
                     "model_id": record.model_id,
                     "content": record.content,
                 }
+            elif hasattr(record, "keys"):
+                yield {k: record[k] for k in _SAFE_FIELDS if k in record}
             else:
-                yield dict(record)
+                yield {k: getattr(record, k) for k in _SAFE_FIELDS if hasattr(record, k)}
