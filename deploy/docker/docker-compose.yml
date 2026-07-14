@@ -8,7 +8,7 @@ services:
     image: sovereignty-ai-gate:latest
     container_name: sia_dashboard
     ports:
-      - "8080:8080"
+      - "9898:9898"
     restart: unless-stopped
     read_only: true
     tmpfs:
