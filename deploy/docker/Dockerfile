@@ -19,7 +19,7 @@ COPY src/dashboard/ /app/dashboard/
 RUN useradd -m -u 1001 sia
 USER sia
 
-EXPOSE 8080
+EXPOSE 7600
 
 # Simple static file server using Python's built-in http.server
-CMD ["python3", "-m", "http.server", "8080", "--directory", "/app/dashboard"]
+CMD ["python3", "-m", "http.server", "7600", "--directory", "/app/dashboard"]
