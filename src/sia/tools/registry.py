@@ -4,6 +4,10 @@ from dataclasses import dataclass
 from typing import Dict
 
 
+class DuplicateToolRegistrationError(ValueError):
+    pass
+
+
 @dataclass(frozen=True)
 class RegisteredTool:
     name: str
@@ -19,6 +23,8 @@ class ToolRegistry:
             raise ValueError("Tool name cannot be empty")
         if not executable:
             raise ValueError("Executable path cannot be empty")
+        if name in self._tools:
+            raise DuplicateToolRegistrationError(f"Tool already registered: {name}")
         self._tools[name] = RegisteredTool(name=name, executable=executable)
 
     def resolve(self, name: str) -> str:
