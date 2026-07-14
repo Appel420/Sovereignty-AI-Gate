@@ -8,12 +8,14 @@ authentication, or transport.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from copy import deepcopy
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import StrEnum
 from hashlib import sha256
 from typing import Any
+from types import MappingProxyType
 from uuid import uuid4
 
 from sia.utils.canonical import canonical_bytes
@@ -58,7 +60,11 @@ class SCAREvent:
     previous_event_hash: str
     signature: str
     event_hash: str
-    metadata: dict[str, Any] = field(default_factory=dict)
+    metadata: Mapping[str, Any] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        """Detach and freeze metadata so signed event state cannot be mutated."""
+        object.__setattr__(self, "metadata", _freeze(self.metadata))
 
     def signing_document(self) -> dict[str, Any]:
         """Return the canonical event document protected by the signature."""
@@ -72,7 +78,7 @@ class SCAREvent:
             "capability_id": self.capability_id,
             "memory_hash": self.memory_hash,
             "previous_event_hash": self.previous_event_hash,
-            "metadata": deepcopy(self.metadata),
+            "metadata": _thaw(self.metadata),
         }
 
     def to_dict(self) -> dict[str, Any]:
@@ -278,7 +284,10 @@ class SCARLedger:
             "identity_id": self.identity_id,
             "device_id": self.device_id,
         }
-        signature = self._root_of_trust.sign(canonical_bytes(document)).signature
+        signed = self._root_of_trust.sign(canonical_bytes(document))
+        document["signature_algorithm"] = signed.algorithm
+        signed = self._root_of_trust.sign(canonical_bytes(document))
+        signature = signed.signature
         return SCARAttestation(**document, signature=signature)
 
     def verify_attestation(self, attestation: SCARAttestation) -> bool:
@@ -366,3 +375,23 @@ def _utc_timestamp() -> str:
 def _hash_event(document: dict[str, Any], signature: str) -> str:
     """Hash a complete signed SCAR event for append-chain linkage."""
     return sha256(canonical_bytes({**document, "signature": signature})).hexdigest()
+
+
+def _freeze(value: Any) -> Any:
+    """Recursively freeze event metadata retained by the ledger."""
+    if isinstance(value, Mapping):
+        return MappingProxyType({key: _freeze(item) for key, item in value.items()})
+    if isinstance(value, list):
+        return tuple(_freeze(item) for item in value)
+    if isinstance(value, tuple):
+        return tuple(_freeze(item) for item in value)
+    return deepcopy(value)
+
+
+def _thaw(value: Any) -> Any:
+    """Return detached canonicalizable data from frozen event metadata."""
+    if isinstance(value, Mapping):
+        return {key: _thaw(item) for key, item in value.items()}
+    if isinstance(value, tuple):
+        return [_thaw(item) for item in value]
+    return deepcopy(value)

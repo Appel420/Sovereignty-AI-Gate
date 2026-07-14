@@ -156,7 +156,7 @@ def test_merkle_attestation_binds_current_identity_device_and_root():
     assert attestation.root_hash == ledger.get_merkle_root().root
     assert attestation.entry_count == 2
     assert attestation.version == 1
-    assert attestation.signature_algorithm == "ML-DSA-87"
+    assert attestation.signature_algorithm == "DEV-HMAC-SHA256"
     assert attestation.identity_id == "human-1"
     assert attestation.device_id == ledger.device_id
     assert ledger.verify_attestation(attestation) is True
@@ -232,3 +232,18 @@ def test_assert_scar_invariants_accepts_valid_ledger():
     ledger.append_event("FIRST", actor=SCARActor.HUMAN)
 
     assert_scar_invariants(ledger)
+
+
+def test_event_metadata_is_immutable_and_export_is_detached():
+    ledger = _ledger()
+    event = ledger.append_event(
+        "FIRST", actor=SCARActor.HUMAN, metadata={"nested": {"value": "original"}}
+    )
+    exported = event.to_dict()
+    exported["metadata"]["nested"]["value"] = "tampered"
+
+    with pytest.raises(TypeError):
+        event.metadata["nested"] = {}
+    with pytest.raises(TypeError):
+        event.metadata["nested"]["value"] = "tampered"
+    assert event.to_dict()["metadata"]["nested"]["value"] == "original"
