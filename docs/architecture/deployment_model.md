@@ -4,16 +4,19 @@
 
 | Service | Port | Notes |
 |---|---|---|
-| Keycloak | **8080** | Reserved exclusively for Keycloak — no other service uses this port |
-| SIA Dashboard | **7600** | Self-hosted dashboard internal port |
-| nginx (Docker) | **80** | Public-facing reverse proxy inside the container |
+| Koder frontend | **9898** | Internal frontend port |
+| Node.js backend | **9899** | External backend port |
+| Python backend | **9897** | Internal backend port |
+
+Only these service ports are assigned by this project. Keycloak, when deployed, retains
+its own port **8080** and is not exposed or configured by this deployment.
 
 ## Modes
 
 ### Local (default)
 Single-user, single-machine. All state on device. Run with:
 ```bash
-python3 -m http.server 7600 --directory src/dashboard
+python3 -m http.server 9898 --directory src/dashboard
 ```
 
 ### Self-Hosted (Docker)
