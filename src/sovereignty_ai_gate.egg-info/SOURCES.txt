@@ -3,6 +3,8 @@ README.md
 pyproject.toml
 src/sia/__init__.py
 src/sia/authority.py
+src/sia/authority_adapters.py
+src/sia/authority_gate.py
 src/sia/audit/__init__.py
 src/sia/audit/ledger.py
 src/sia/audit/recorder.py
