@@ -8,8 +8,9 @@
 | Node.js backend | **9899** | External backend port |
 | Python backend | **9897** | Internal backend port |
 
-Only these service ports are assigned by this project. Keycloak, when deployed, retains
-its own port **8080** and is not exposed or configured by this deployment.
+These assignments are immutable and must never be changed. No service may use ports
+in the 3000, 5000, or 8000 ranges. Keycloak is the sole exception permitted to use
+**8080/8443**; it is not exposed or configured by this deployment.
 
 ## Modes
 
