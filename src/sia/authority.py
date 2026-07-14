@@ -7,10 +7,25 @@ import/export, and conformance harness.
 """
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Sequence
 
 from sia.audit.ledger import AuditLedger
 from sia.audit.recorder import AuditRecorder
+from sia.authority_adapters import (
+    CapabilityAdapter,
+    DefaultMemoryFirewall,
+    EvidenceLedgerAdapter,
+    IdentityAdapter,
+    PolicyAdapter,
+    VaultAdapter,
+)
+from sia.authority_gate import (
+    AIProvider,
+    AuthorizationDecision,
+    DefaultAuthorityGate,
+    IdentityContext,
+    OperationRequest,
+)
 from sia.conformance.harness import ConformanceHarness
 from sia.delegation.authorizer import DelegationAuthorizer
 from sia.delegation.models import DelegationToken
@@ -59,6 +74,22 @@ class SovereignAuthority:
         self._recorder = AuditRecorder(self._ledger)
         self._loader = BundleLoader()
         self._conformance = ConformanceHarness()
+        self._identity = IdentityAdapter.create(owner_id)
+        self._authority_evidence = EvidenceLedgerAdapter(
+            identity_id=owner_id,
+            root_of_trust=self._identity.root_of_trust,
+        )
+        self._vault = VaultAdapter(
+            owner_identity=owner_id,
+            root_of_trust=self._identity.root_of_trust,
+        )
+        self._memory_firewall = DefaultMemoryFirewall()
+        self._authority_gate = DefaultAuthorityGate(
+            identity_verifier=self._identity,
+            capability_verifier=CapabilityAdapter(),
+            policy=PolicyAdapter(self._policy),
+            evidence=self._authority_evidence,
+        )
 
     # ── Lifecycle ─────────────────────────────────────────────────────────────
 
@@ -90,6 +121,44 @@ class SovereignAuthority:
     @property
     def conformance(self) -> ConformanceHarness:
         return self._conformance
+
+    @property
+    def authority_evidence(self) -> EvidenceLedgerAdapter:
+        return self._authority_evidence
+
+    @property
+    def authority_gate(self) -> DefaultAuthorityGate:
+        return self._authority_gate
+
+    @property
+    def vault(self) -> VaultAdapter:
+        return self._vault
+
+    def identity_context(self) -> IdentityContext:
+        return self._identity.identity_context()
+
+    def make_operation_request(
+        self,
+        operation: str,
+        *,
+        capability: object | None = None,
+        parent_capability: object | None = None,
+        resource_id: str = "",
+        model_id: str = "",
+        provider_id: str | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> OperationRequest:
+        return OperationRequest(
+            operation=operation,
+            identity=self.identity_context(),
+            capability=capability,
+            parent_capability=parent_capability,
+            requester_id=self._owner_id,
+            resource_id=resource_id,
+            model_id=model_id,
+            provider_id=provider_id,
+            metadata=dict(metadata or {}),
+        )
 
     # ── Boundary management ───────────────────────────────────────────────────
 
@@ -156,6 +225,18 @@ class SovereignAuthority:
             access_type="write",
         )
 
+    def store_memory_authorized(
+        self,
+        request: OperationRequest,
+        record: MemoryRecord,
+    ) -> AuthorizationDecision:
+        self._require_initialized()
+        decision = self.authorize_operation(request)
+        if decision.allowed:
+            self.store_memory(record)
+            self._vault.record_memory(record, capability_id=decision.capability_id)
+        return decision
+
     def read_memory(
         self, record_id: str, requesting_model_id: str
     ) -> MemoryRecord:
@@ -170,6 +251,18 @@ class SovereignAuthority:
             access_type="read",
         )
         return record
+
+    def read_memory_authorized(
+        self,
+        request: OperationRequest,
+        record_id: str,
+        requesting_model_id: str,
+    ) -> tuple[AuthorizationDecision, MemoryRecord | None]:
+        self._require_initialized()
+        decision = self.authorize_operation(request)
+        if not decision.allowed:
+            return decision, None
+        return decision, self.read_memory(record_id, requesting_model_id)
 
     # ── Export / Import ───────────────────────────────────────────────────────
 
@@ -195,6 +288,20 @@ class SovereignAuthority:
         )
         return bundle
 
+    def create_export_authorized(
+        self,
+        request: OperationRequest,
+        bundle_id: str,
+        payload: dict[str, Any],
+        payload_hash: str,
+        signature: str,
+    ) -> tuple[AuthorizationDecision, ExportBundle | None]:
+        self._require_initialized()
+        decision = self.authorize_operation(request)
+        if not decision.allowed:
+            return decision, None
+        return decision, self.create_export(bundle_id, payload, payload_hash, signature)
+
     def load_import(self, bundle: ImportBundle) -> None:
         """Validate and load an import bundle."""
         self._require_initialized()
@@ -203,6 +310,17 @@ class SovereignAuthority:
             actor_id=self._owner_id, bundle_id=bundle.bundle_id
         )
 
+    def load_import_authorized(
+        self,
+        request: OperationRequest,
+        bundle: ImportBundle,
+    ) -> AuthorizationDecision:
+        self._require_initialized()
+        decision = self.authorize_operation(request)
+        if decision.allowed:
+            self.load_import(bundle)
+        return decision
+
     # ── Policy ────────────────────────────────────────────────────────────────
 
     def enforce_policy(self, request: dict[str, Any]) -> None:
@@ -210,8 +328,62 @@ class SovereignAuthority:
         self._require_initialized()
         self._policy.enforce(request)
 
+    def authorize_operation(self, request: OperationRequest) -> AuthorizationDecision:
+        self._require_initialized()
+        return self._authority_gate.authorize(request)
+
+    def execute_tool_authorized(
+        self,
+        request: OperationRequest,
+        *,
+        executor: Any,
+        tool_name: str,
+        args: Sequence[str],
+        capability: Any,
+        input_hash: str = "",
+        requester: str = "",
+        runtime_version: str = "",
+    ) -> tuple[AuthorizationDecision, Any | None]:
+        self._require_initialized()
+        decision = self.authorize_operation(request)
+        if not decision.allowed:
+            return decision, None
+        return decision, executor.execute(
+            tool_name,
+            args,
+            capability,
+            input_hash=input_hash,
+            requester=requester,
+            runtime_version=runtime_version,
+        )
+
+    def call_provider_authorized(
+        self,
+        request: OperationRequest,
+        *,
+        provider: AIProvider,
+        record_ids: Sequence[str] = (),
+    ) -> tuple[AuthorizationDecision, dict[str, Any] | None]:
+        self._require_initialized()
+        decision = self.authorize_operation(request)
+        if not decision.allowed:
+            return decision, None
+        packet = self._memory_firewall.build_context_packet(
+            request,
+            decision,
+            provider_id=provider.provider_id,
+            memory_records=[self._memory[record_id] for record_id in record_ids],
+        )
+        return decision, provider.execute(packet)
+
     # ── Audit ─────────────────────────────────────────────────────────────────
 
     def verify_ledger(self) -> None:
         """Verify ledger chain integrity. Raises on tamper detection."""
         self._ledger.verify_chain()
+
+    def verify_authority_evidence(self) -> bool:
+        return (
+            self._authority_evidence.verify_chain()
+            and self._vault.verify_chain()
+        )
