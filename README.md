@@ -8,6 +8,18 @@ This project is serious by design:
 - It does what it says.
 - Every critical behavior is expected to be verifiable in code and tests.
 
+## Global Government / DoD-Grade Posture
+
+This project is engineered for high-assurance environments where failure, ambiguity, and hidden behavior are unacceptable.
+
+- **Mission-critical reliability**: core workflows are deterministic, testable, and reproducible.
+- **Operational sovereignty**: critical authority paths remain functional in offline and air-gapped deployments.
+- **Cryptographic accountability**: identity, delegation, and audit evidence are signed, chained, and tamper-evident.
+- **Policy enforcement over preference**: security-critical behavior is enforced by code paths and tests, not documentation alone.
+- **Evidence-first governance**: claims must be backed by verifiable artifacts, logs, and repeatable validation runs.
+
+Compliance note: this repository targets defense-grade engineering rigor, but no formal certification is implied unless explicitly documented in governed release artifacts.
+
 ## What This Project Guarantees
 
 - **Human authority is explicit**: AI actions must trace back to a human grant.
