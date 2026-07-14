@@ -1,11 +1,15 @@
 """Utils package for Sovereignty AI Gate."""
-from sia.utils.canonical import canonical_json, canonical_dict
-from sia.utils.hashing import sha256_hex, sha256_object, chain_hash
+from sia.utils.canonical import canonical_bytes, canonical_json, canonical_dict
+from sia.utils.hashing import HASH_ALGORITHM, DEFAULT_DOMAIN, canonical_hash, sha256_hex, sha256_object, chain_hash
 from sia.utils.serialization import load_json, dump_json
 
 __all__ = [
+    "canonical_bytes",
     "canonical_json",
     "canonical_dict",
+    "HASH_ALGORITHM",
+    "DEFAULT_DOMAIN",
+    "canonical_hash",
     "sha256_hex",
     "sha256_object",
     "chain_hash",
