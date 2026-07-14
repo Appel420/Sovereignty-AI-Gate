@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import hashlib
-import json
 import subprocess
 from datetime import datetime, timezone
 from typing import Sequence
+
+from sia.utils.canonical import canonical_bytes
 
 from .audit import AuditLedger
 from .models import ToolCapability, ToolExecutionRequest, ToolExecutionResult
@@ -107,7 +108,7 @@ class PlaygroundExecutor:
             "returncode": returncode,
             "runtime_version": runtime_version,
         }
-        encoded = json.dumps(payload, sort_keys=True).encode("utf-8")
+        encoded = canonical_bytes(payload)
         return hashlib.sha256(encoded).hexdigest()
 
     def _hash_signature(self, capability_signature: str, execution_hash: str) -> str:
