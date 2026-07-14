@@ -28,9 +28,12 @@ src/sia/memory/validator.py
 src/sia/security/__init__.py
 src/sia/security/authority_policy.py
 src/sia/security/boundary_registry.py
+src/sia/tools/__init__.py
+src/sia/tools/audit.py
 src/sia/tools/executor.py
 src/sia/tools/models.py
 src/sia/tools/registry.py
+src/sia/tools/validator.py
 src/sia/utils/__init__.py
 src/sia/utils/canonical.py
 src/sia/utils/hashing.py
