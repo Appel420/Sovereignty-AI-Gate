@@ -11,7 +11,9 @@ from sovereignty_core.audit.ledger import (
     SCARActor,
     SCARLedger,
     SCARLedgerError,
+    assert_scar_invariants,
 )
+from sovereignty_core.audit.merkle import verify_merkle_proof
 from sovereignty_core.identity.root_of_trust import RootOfTrust, SoftwareTrustBackend
 from sovereignty_core.permissions.capability import CapabilityScope, CapabilityToken
 from sovereignty_core.vault.memory_chain import (
@@ -47,6 +49,8 @@ def test_append_event_is_device_signed_and_chained():
 
     assert first.previous_event_hash == GENESIS_EVENT_HASH
     assert second.previous_event_hash == first.event_hash
+    assert first.sequence == 0
+    assert second.sequence == 1
     assert first.signature
     assert ledger.verify_integrity() is True
 
@@ -126,6 +130,11 @@ def test_provider_access_requires_active_capability():
         ledger.record_provider_access(token)
 
 
+def test_provider_events_require_capability_provenance():
+    with pytest.raises(SCARLedgerError, match="capability provenance"):
+        _ledger().append_event("PROVIDER_EVENT", actor=SCARActor.PROVIDER)
+
+
 def test_provider_access_carries_capability_and_memory_hash():
     ledger = _ledger()
     token = _token()
@@ -146,6 +155,8 @@ def test_merkle_attestation_binds_current_identity_device_and_root():
 
     assert attestation.root_hash == ledger.get_merkle_root().root
     assert attestation.entry_count == 2
+    assert attestation.version == 1
+    assert attestation.signature_algorithm == "ML-DSA-87"
     assert attestation.identity_id == "human-1"
     assert attestation.device_id == ledger.device_id
     assert ledger.verify_attestation(attestation) is True
@@ -195,3 +206,29 @@ def test_export_empty_ledger_contains_no_attestation():
 
     assert bundle["entries"] == []
     assert "attestation" not in bundle
+
+
+def test_merkle_proof_exports_one_event_without_exposing_the_ledger():
+    ledger = _ledger()
+    ledger.append_event("FIRST", actor=SCARActor.HUMAN)
+    event = ledger.append_event("SECOND", actor=SCARActor.HUMAN)
+
+    proof = ledger.prove_event(event.sequence)
+
+    assert proof.root == ledger.get_merkle_root().root
+    assert verify_merkle_proof(proof) is True
+
+
+def test_integrity_detects_sequence_tampering():
+    ledger = _ledger()
+    event = ledger.append_event("FIRST", actor=SCARActor.HUMAN)
+    ledger._events[0] = replace(event, sequence=1)
+
+    assert ledger.verify_integrity() is False
+
+
+def test_assert_scar_invariants_accepts_valid_ledger():
+    ledger = _ledger()
+    ledger.append_event("FIRST", actor=SCARActor.HUMAN)
+
+    assert_scar_invariants(ledger)

@@ -12,13 +12,14 @@ from sovereignty_core.audit.merkle import (
     hash_pair,
     verify_merkle_proof,
 )
-from sovereignty_core.audit.ledger import (
+from sovereignty_core.audit.scar import (
     GENESIS_EVENT_HASH,
     SCARActor,
     SCARAttestation,
     SCAREvent,
     SCARLedger,
     SCARLedgerError,
+    assert_scar_invariants,
 )
 
 __all__ = [
@@ -31,6 +32,7 @@ __all__ = [
     "SCAREvent",
     "SCARLedger",
     "SCARLedgerError",
+    "assert_scar_invariants",
     "build_merkle_from_audit_ledger",
     "build_merkle_from_scarlog",
     "canonicalize",
