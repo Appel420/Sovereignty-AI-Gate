@@ -149,3 +149,33 @@ def test_memory_chain_validates_hash_chain_and_signature():
     tampered = replace(chain.blocks[1], content={"message": "tampered"})
     chain._blocks[1] = tampered
     assert chain.validate(trust.verify_signature) is False
+
+
+# ── Software Ed25519 backend ─────────────────────────────────────────────────
+
+
+def test_signed_object_algorithm_reflects_backend_algorithm():
+    """RootOfTrust.sign() must propagate the backend algorithm to SignedObject."""
+    trust = RootOfTrust(SoftwareTrustBackend(b"\x05" * 32))
+    signed = trust.sign(b"test payload")
+    assert signed.algorithm == "Ed25519", (
+        "SignedObject.algorithm must equal the backend's declared algorithm identifier"
+    )
+
+
+def test_software_backend_algorithm_property():
+    """SoftwareTrustBackend must declare its real signing algorithm."""
+    backend = SoftwareTrustBackend(b"\x06" * 32)
+    assert backend.algorithm == "Ed25519"
+
+
+def test_software_backend_is_not_hardware_backed():
+    """SoftwareTrustBackend must never report hardware_backed=True."""
+    backend = SoftwareTrustBackend(b"\x07" * 32)
+    assert backend.hardware_backed is False
+
+
+def test_root_of_trust_identity_hardware_backed_false_for_software_backend():
+    """DeviceIdentity.hardware_backed must be False when using SoftwareTrustBackend."""
+    trust = RootOfTrust(SoftwareTrustBackend(b"\x09" * 32))
+    assert trust.identity.hardware_backed is False

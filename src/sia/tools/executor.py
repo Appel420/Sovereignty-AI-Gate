@@ -103,8 +103,8 @@ class PlaygroundExecutor:
         )
 
         timestamp = datetime.now(timezone.utc).isoformat()
-        stdout_hash = hashlib.sha256(result.stdout.encode("utf-8")).hexdigest()
-        stderr_hash = hashlib.sha256(result.stderr.encode("utf-8")).hexdigest()
+        stdout_hash = hashlib.sha3_512(result.stdout.encode("utf-8")).hexdigest()
+        stderr_hash = hashlib.sha3_512(result.stderr.encode("utf-8")).hexdigest()
         execution_hash = self._hash_execution(
             tool_name=ctx.tool_name,
             args=ctx.args,
@@ -166,8 +166,8 @@ class PlaygroundExecutor:
             "runtime_version": runtime_version,
         }
         encoded = canonical_bytes(payload)
-        return hashlib.sha256(encoded).hexdigest()
+        return hashlib.sha3_512(encoded).hexdigest()
 
     def _hash_signature(self, capability_signature: str, execution_hash: str) -> str:
         payload = f"{capability_signature}:{execution_hash}".encode("utf-8")
-        return hashlib.sha256(payload).hexdigest()
+        return hashlib.sha3_512(payload).hexdigest()

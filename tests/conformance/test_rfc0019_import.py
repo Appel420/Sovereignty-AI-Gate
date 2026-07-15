@@ -11,7 +11,7 @@ from sia.imports.validator import validate_import
 from sia.imports.loader import BundleLoader
 from sia.errors import codes
 from sia.errors.exceptions import ImportError as SIAImportError
-from sia.utils.hashing import sha256_object
+from sia.utils.hashing import hash_object
 
 FIXTURES = Path(__file__).parent.parent / "fixtures"
 
@@ -25,7 +25,7 @@ def test_valid_import_fixture():
 def test_import_duplicate_rejected():
     loader = BundleLoader()
     payload = {"boundaries": []}
-    h = sha256_object(payload)
+    h = hash_object(payload)
     bundle = ImportBundle(
         bundle_id="imp-dup",
         created_by="user:bob",
@@ -56,7 +56,7 @@ def test_import_hash_mismatch():
 
 def test_import_unsupported_version():
     payload = {"data": "x"}
-    h = sha256_object(payload)
+    h = hash_object(payload)
     bundle = ImportBundle(
         bundle_id="imp-v99",
         created_by="user:bob",
@@ -73,7 +73,7 @@ def test_import_unsupported_version():
 
 def test_import_roundtrip():
     payload = {"k": "v"}
-    h = sha256_object(payload)
+    h = hash_object(payload)
     bundle = ImportBundle(
         bundle_id="imp-rt",
         created_by="user:bob",
@@ -89,7 +89,7 @@ def test_import_roundtrip():
 def test_import_loader_list():
     loader = BundleLoader()
     payload = {"x": 1}
-    h = sha256_object(payload)
+    h = hash_object(payload)
     for i in range(3):
         bundle = ImportBundle(
             bundle_id=f"imp-list-{i}",

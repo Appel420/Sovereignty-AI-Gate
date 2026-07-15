@@ -7,15 +7,15 @@ and no external dependencies.
 
 - All entropy MUST come from `crypto.getRandomValues()` or `crypto.subtle`.
 - `Math.random()` is PROHIBITED.
-- State hashes are computed with `crypto.subtle.digest("SHA-256", ...)`.
+- State hashes are computed with `crypto.subtle.digest("SHA-512", ...)`.
 - The dashboard renders from local state (localStorage) only; no network calls.
 
 ## Modules
 
 | Module | Purpose |
 |--------|---------|
-| `tpm.js` | TPM PCR measurement and nonce generation |
-| `signatures.js` | ECDSA P-256 key generation and signing |
+| `tpm.js` | Software measurement and nonce generation; no TPM claim |
+| `signatures.js` | ECDSA P-521 key generation and signing |
 | `compliance.js` | RFC compliance status tracking |
 | `threat_feed.js` | Local threat indicator registry |
 

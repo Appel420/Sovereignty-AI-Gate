@@ -4,13 +4,14 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from sia import LocalMockProvider, ProtectedOperation, SovereignAuthority
+from sia import LocalAuthorityProbeProvider, ProtectedOperation, SovereignAuthority
 from sia.authority_gate import AuthorizedContextPacket, IdentityContext, OperationRequest
 from sia.delegation.models import DelegationToken
+from sia.errors.exceptions import MemoryConsentDeniedError
 from sia.memory.models import MemoryRecord
 from sia.tools import PlaygroundExecutor, ToolCapability, ToolRegistry
 from sia.tools.audit import AuditLedger as ToolAuditLedger
-from sia.utils.hashing import sha256_object
+from sia.utils.hashing import hash_object
 from sovereignty_core.permissions.capability import CapabilityScope, CapabilityToken
 
 
@@ -226,7 +227,7 @@ def test_export_requires_the_gate():
         ),
         "exp-001",
         payload,
-        sha256_object(payload),
+        hash_object(payload),
         "a" * 128,
     )
 
@@ -261,7 +262,7 @@ def test_tool_execution_requires_the_gate(tmp_path):
 
 
 def test_provider_execution_requires_an_authorized_context_packet():
-    provider = LocalMockProvider()
+    provider = LocalAuthorityProbeProvider()
     packet = AuthorizedContextPacket(
         packet_id="pkt-1",
         provider_id=provider.provider_id,
@@ -279,10 +280,10 @@ def test_provider_execution_requires_an_authorized_context_packet():
 
 def test_provider_receives_no_vault_or_keys():
     authority = make_authority(ProtectedOperation.CALL_PROVIDER)
-    provider = LocalMockProvider()
+    provider = LocalAuthorityProbeProvider()
     record = MemoryRecord(
         record_id="mem-provider",
-        model_id="model:gpt4",
+        model_id=provider.provider_id,
         content={"text": "approved context"},
     )
     authority.store_memory(record)
@@ -301,10 +302,10 @@ def test_provider_receives_no_vault_or_keys():
 
     assert decision.allowed is True
     assert response == {
-        "provider_id": "local.mock",
+        "provider_id": "local.authority-probe",
         "status": "ok",
         "authorized": True,
-        "proof": f"local.mock:CALL_PROVIDER:{capability.token_id}:1",
+        "proof": f"local.authority-probe:CALL_PROVIDER:{capability.token_id}:1",
     }
     assert provider.last_packet is not None
     payload = provider.last_packet.to_dict()
@@ -314,15 +315,70 @@ def test_provider_receives_no_vault_or_keys():
     assert payload["memory_context"] == [
         {
             "record_id": "mem-provider",
-            "model_id": "model:gpt4",
+            "model_id": provider.provider_id,
             "content": {"text": "approved context"},
         }
     ]
 
 
+def test_provider_context_requires_memory_consent():
+    authority = make_authority(ProtectedOperation.CALL_PROVIDER)
+    provider = LocalAuthorityProbeProvider()
+    record = MemoryRecord(
+        record_id="mem-private",
+        model_id="xai.grok",
+        content={"text": "private context"},
+    )
+    authority.store_memory(record)
+    capability = make_delegation(["provider.call"], grantee_id=provider.provider_id)
+
+    with pytest.raises(MemoryConsentDeniedError):
+        authority.call_provider_authorized(
+            authority.make_operation_request(
+                ProtectedOperation.CALL_PROVIDER,
+                capability=capability,
+                provider_id=provider.provider_id,
+                resource_id=record.record_id,
+            ),
+            provider=provider,
+            record_ids=[record.record_id],
+        )
+
+    assert provider.last_packet is None
+
+
+def test_provider_context_allows_explicitly_consented_memory():
+    authority = make_authority(ProtectedOperation.CALL_PROVIDER)
+    provider = LocalAuthorityProbeProvider()
+    record = MemoryRecord(
+        record_id="mem-shared",
+        model_id="xai.grok",
+        content={"text": "approved context"},
+        consent=[provider.provider_id],
+    )
+    authority.store_memory(record)
+    capability = make_delegation(["provider.call"], grantee_id=provider.provider_id)
+
+    decision, response = authority.call_provider_authorized(
+        authority.make_operation_request(
+            ProtectedOperation.CALL_PROVIDER,
+            capability=capability,
+            provider_id=provider.provider_id,
+            resource_id=record.record_id,
+        ),
+        provider=provider,
+        record_ids=[record.record_id],
+    )
+
+    assert decision.allowed is True
+    assert response is not None
+    assert provider.last_packet is not None
+    assert provider.last_packet.memory_context[0]["record_id"] == record.record_id
+
+
 def test_provider_lifecycle_is_authority_owned_and_sequenced():
     authority = make_authority(ProtectedOperation.CALL_PROVIDER)
-    provider = LocalMockProvider()
+    provider = LocalAuthorityProbeProvider()
     capability = make_delegation(["provider.call"], grantee_id=provider.provider_id)
 
     decision, response = authority.call_provider_authorized(
@@ -352,7 +408,7 @@ def test_provider_lifecycle_is_authority_owned_and_sequenced():
 
 def test_denied_provider_call_records_authority_failure():
     authority = make_authority(ProtectedOperation.CALL_PROVIDER)
-    provider = LocalMockProvider()
+    provider = LocalAuthorityProbeProvider()
 
     decision, response = authority.call_provider_authorized(
         authority.make_operation_request(
@@ -397,3 +453,46 @@ def test_audit_chain_verifies():
     assert denied.allowed is False
     assert granted.allowed is True
     assert authority.verify_authority_evidence() is True
+
+
+# ── Software backend / hardware-backed guards ─────────────────────────────────
+
+
+def test_identity_context_hardware_backed_false_for_software_authority():
+    """
+    SovereignAuthority backed by SoftwareTrustBackend must produce
+    IdentityContext with hardware_backed=False.
+
+    This ensures production gates can detect and reject software-backed
+    identities when hardware attestation is required.
+    """
+    authority = make_authority(ProtectedOperation.EXECUTE_TOOL)
+    context = authority._identity.identity_context()
+    assert context.hardware_backed is False, (
+        "Software-backed authority must expose hardware_backed=False "
+        "so production gates can enforce hardware attestation requirements."
+    )
+
+
+def test_evidence_bundle_discloses_software_backend():
+    """
+    Software-backed audit bundles must disclose that they are not
+    hardware-backed and state the actual signing algorithm.
+    """
+    authority = make_authority(ProtectedOperation.EXECUTE_TOOL)
+    capability = make_delegation(["tool.execute"])
+    authority.authorize_operation(
+        authority.make_operation_request(
+            ProtectedOperation.EXECUTE_TOOL,
+            capability=capability,
+            resource_id="tool:test",
+        )
+    )
+    bundle = authority._authority_evidence.export_bundle()
+    assert bundle.get("hardware_backed") is False
+    assert bundle.get("signing_algorithm") == "Ed25519", (
+        "Audit bundle must declare the actual signing algorithm"
+    )
+    assert "not carry hardware-backed" in bundle.get("hardware_warning", ""), (
+        "Audit bundle must disclose the missing hardware attestation"
+    )

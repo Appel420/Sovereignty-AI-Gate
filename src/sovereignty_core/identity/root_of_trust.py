@@ -2,9 +2,10 @@
 Root-of-trust abstractions for the Sovereign AI Memory Architecture.
 
 The root layer defines the stable contract that higher SAMA layers depend
-on. It does not pretend to be a production cryptographic implementation.
-Production deployments should supply platform-backed adapters that keep
-root material inside a secure device boundary.
+on. SoftwareTrustBackend performs real Ed25519 signatures but cannot claim
+hardware-backed key protection. Production deployments should supply
+platform-backed adapters that keep root material inside a secure device
+boundary.
 """
 
 from __future__ import annotations
@@ -12,33 +13,17 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 import hashlib
-import hmac
 import secrets
 import time
+
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric.ed25519 import (
+    Ed25519PrivateKey,
+)
 
 
 class RootTrustError(RuntimeError):
     """Raised when a root-of-trust operation cannot be completed."""
-
-
-class DevelopmentSigner:
-    """
-    Deterministic development-only integrity helper.
-
-    WARNING:
-    This is not a public-key signature scheme. It exists only for local
-    testing and interface validation. Production backends must use secure
-    platform signing APIs or modern signature algorithms such as Ed25519.
-    """
-
-    @staticmethod
-    def sign(secret: bytes, payload: bytes) -> str:
-        return hmac.new(secret, payload, hashlib.sha256).hexdigest()
-
-    @staticmethod
-    def verify(secret: bytes, payload: bytes, signature: str) -> bool:
-        expected = DevelopmentSigner.sign(secret, payload)
-        return hmac.compare_digest(expected, signature)
 
 
 class TrustBackend(ABC):
@@ -58,6 +43,16 @@ class TrustBackend(ABC):
     @abstractmethod
     def hardware_backed(self) -> bool:
         """Return whether the backend is backed by secure hardware."""
+
+    @property
+    @abstractmethod
+    def algorithm(self) -> str:
+        """
+        Return the signing algorithm identifier for this backend.
+
+        Return a standard identifier such as ``"Ed25519"`` or
+        ``"ML-DSA-87"``.
+        """
 
     @abstractmethod
     def public_key_bytes(self) -> bytes:
@@ -87,31 +82,50 @@ class TrustBackend(ABC):
 
 class SoftwareTrustBackend(TrustBackend):
     """
-    Development backend that stores root material in process memory.
+    Software Ed25519 backend that stores root material in process memory.
 
-    This backend is intentionally explicit and human-readable. It is suitable
-    for local testing only and must not be treated as a hardware root.
+    This backend uses real asymmetric signatures, but it must not be treated
+    as a hardware root because its private material is process-resident.
     """
+
+    _ALGORITHM = "Ed25519"
 
     def __init__(self, root_secret: bytes | None = None) -> None:
         self._root_secret = root_secret or secrets.token_bytes(32)
+        private_bytes = hashlib.sha3_512(
+            b"SAMA_ED25519_PRIVATE:" + self._root_secret
+        ).digest()[:32]
+        self._private_key = Ed25519PrivateKey.from_private_bytes(private_bytes)
+        self._public_key = self._private_key.public_key()
 
     @property
     def backend_name(self) -> str:
-        return "software"
+        return "software-ed25519"
 
     @property
     def hardware_backed(self) -> bool:
         return False
 
+    @property
+    def algorithm(self) -> str:
+        return self._ALGORITHM
+
     def public_key_bytes(self) -> bytes:
-        return hashlib.sha256(b"SAMA_ROOT_PUBLIC:" + self._root_secret).digest()
+        return self._public_key.public_bytes(
+            serialization.Encoding.Raw, serialization.PublicFormat.Raw
+        )
 
     def sign(self, payload: bytes) -> str:
-        return DevelopmentSigner.sign(self._root_secret, payload)
+        return self._private_key.sign(payload).hex()
 
     def verify(self, payload: bytes, signature: str) -> bool:
-        return DevelopmentSigner.verify(self._root_secret, payload, signature)
+        try:
+            self._public_key.verify(bytes.fromhex(signature), payload)
+        except (ValueError, TypeError):
+            return False
+        except Exception:
+            return False
+        return True
 
     def derive_key(self, context: bytes, *, length: int = 32) -> bytes:
         if length <= 0:
@@ -120,7 +134,7 @@ class SoftwareTrustBackend(TrustBackend):
         output = bytearray()
         counter = 0
         while len(output) < length:
-            block = hashlib.sha256(
+            block = hashlib.sha3_512(
                 b"SAMA_DERIVE:" + counter.to_bytes(4, "big") + context + self._root_secret
             ).digest()
             output.extend(block)
@@ -129,6 +143,7 @@ class SoftwareTrustBackend(TrustBackend):
 
     def best_effort_destroy(self) -> None:
         self._root_secret = b""
+        self._private_key = None
 
 
 @dataclass(frozen=True)
@@ -151,7 +166,7 @@ class SignedObject:
     signature: str
     signer: str
     timestamp: int
-    algorithm: str = "DEV-HMAC-SHA256"
+    algorithm: str = "Ed25519"
 
 
 class RootOfTrust:
@@ -182,7 +197,7 @@ class RootOfTrust:
 
     def _create_identity(self) -> DeviceIdentity:
         public_material = self._backend.public_key_bytes()
-        identity_id = hashlib.sha256(b"SAMA_IDENTITY:" + public_material).hexdigest()
+        identity_id = hashlib.sha3_512(b"SAMA_IDENTITY:" + public_material).hexdigest()
         return DeviceIdentity(
             identity_id=identity_id,
             public_key=public_material.hex(),
@@ -209,19 +224,20 @@ class RootOfTrust:
     def sign(self, payload: bytes) -> SignedObject:
         """Sign payload bytes using the configured backend."""
 
-        payload_hash = hashlib.sha256(payload).hexdigest()
+        payload_hash = hashlib.sha3_512(payload).hexdigest()
         signature = self._backend.sign(payload)
         return SignedObject(
             payload_hash=payload_hash,
             signature=signature,
             signer=self.identity.identity_id,
             timestamp=int(time.time()),
+            algorithm=self._backend.algorithm,
         )
 
     def verify(self, payload: bytes, signed: SignedObject) -> bool:
         """Verify payload integrity and backend signature."""
 
-        expected_hash = hashlib.sha256(payload).hexdigest()
+        expected_hash = hashlib.sha3_512(payload).hexdigest()
         if expected_hash != signed.payload_hash:
             return False
         return self._backend.verify(payload, signed.signature)

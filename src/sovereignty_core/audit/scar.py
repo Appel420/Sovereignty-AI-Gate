@@ -13,7 +13,7 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import StrEnum
-from hashlib import sha256
+from hashlib import sha3_512
 from typing import Any
 from types import MappingProxyType
 from uuid import uuid4
@@ -30,7 +30,7 @@ from sovereignty_core.permissions.capability import CapabilityToken
 from sovereignty_core.vault.memory_chain import MemoryBlock
 
 
-GENESIS_EVENT_HASH = "0" * 64
+GENESIS_EVENT_HASH = "0" * 128
 
 
 class SCARLedgerError(RuntimeError):
@@ -374,7 +374,7 @@ def _utc_timestamp() -> str:
 
 def _hash_event(document: dict[str, Any], signature: str) -> str:
     """Hash a complete signed SCAR event for append-chain linkage."""
-    return sha256(canonical_bytes({**document, "signature": signature})).hexdigest()
+    return sha3_512(canonical_bytes({**document, "signature": signature})).hexdigest()
 
 
 def _freeze(value: Any) -> Any:

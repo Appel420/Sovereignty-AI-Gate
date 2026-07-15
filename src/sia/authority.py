@@ -44,7 +44,6 @@ from sia.providers.router import ProviderRouter
 from sia.security.authority_policy import AuthorityPolicy
 from sia.security.boundary_registry import BoundaryRegistry, BoundaryType
 from sia.tools.models import _issue_tool_execution_context
-from sia.utils.hashing import sha256_object
 
 __version__ = "0.1.0"
 
@@ -562,7 +561,10 @@ class SovereignAuthority:
             request,
             decision,
             provider_id=provider.provider_id,
-            memory_records=[self._memory[record_id] for record_id in record_ids],
+            memory_records=[
+                self.read_memory(record_id, provider.provider_id)
+                for record_id in record_ids
+            ],
         )
         self._record_provider_event(
             ProviderEventType.REQUESTED, context, provider_id=provider.provider_id

@@ -120,7 +120,7 @@ def test_audit_hash_is_written(tmp_path):
 
     records = ledger.read_all()
     assert "ledger_hash" in records[0]
-    assert len(records[0]["ledger_hash"]) == 64
+    assert len(records[0]["ledger_hash"]) == 128
 
 
 def test_execution_hash_is_deterministic_for_same_identity(tmp_path):

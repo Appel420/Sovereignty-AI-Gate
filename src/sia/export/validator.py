@@ -9,7 +9,7 @@ from __future__ import annotations
 from sia.errors import codes
 from sia.errors.exceptions import ExportError
 from sia.export.models import ExportBundle, EXPORT_SCHEMA_VERSION
-from sia.utils.hashing import sha256_object
+from sia.utils.hashing import hash_object
 
 REQUIRED_FIELDS = {
     "bundle_id", "created_by", "payload", "payload_hash",
@@ -53,7 +53,7 @@ def validate_bundle(bundle: ExportBundle) -> None:
             )
 
     # Payload hash integrity
-    expected_hash = sha256_object(d["payload"])
+    expected_hash = hash_object(d["payload"])
     if d["payload_hash"] != expected_hash:
         raise ExportError(
             codes.E_EXPORT_SCHEMA_INVALID,

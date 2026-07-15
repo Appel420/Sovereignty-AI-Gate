@@ -16,7 +16,7 @@ File layout::
 Encryption
 ----------
 The entire JSON payload is encrypted at rest using Fernet (AES-128-CBC with
-a SHA256 HMAC — part of the ``cryptography`` package already declared as a
+an authenticated encryption construction — part of the ``cryptography`` package already declared as a
 project dependency).  The Fernet key is derived deterministically from the
 device ``RootOfTrust`` so that the file is readable only on the device that
 created it.

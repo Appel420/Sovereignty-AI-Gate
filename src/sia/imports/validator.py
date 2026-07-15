@@ -8,7 +8,7 @@ from __future__ import annotations
 from sia.errors import codes
 from sia.errors.exceptions import ImportError as SIAImportError
 from sia.imports.models import SUPPORTED_VERSIONS
-from sia.utils.hashing import sha256_object
+from sia.utils.hashing import hash_object
 
 
 REQUIRED_FIELDS = {"ledger_version", "ledger_hash", "records"}
@@ -21,7 +21,7 @@ def validate_import(bundle) -> None:
             code=codes.E_IMPORT_VERSION_UNSUPPORTED,
             message=f"unsupported import schema version: {bundle.schema_version!r}",
         )
-    expected = sha256_object(bundle.payload)
+    expected = hash_object(bundle.payload)
     if bundle.payload_hash != expected:
         raise SIAImportError(
             code=codes.E_IMPORT_SCHEMA_INVALID,

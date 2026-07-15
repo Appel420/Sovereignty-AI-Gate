@@ -12,9 +12,9 @@ from datetime import datetime, timezone
 from typing import Any
 
 from sia.errors.exceptions import AuditChainError, AuditTamperedError
-from sia.utils.hashing import chain_hash, sha256_object
+from sia.utils.hashing import hash_object
 
-GENESIS_HASH = "0" * 64  # sentinel hash for the first entry
+GENESIS_HASH = "0" * 128  # sentinel hash for the first entry
 
 
 @dataclass
@@ -27,8 +27,8 @@ class LedgerEntry:
     ``payload``     — JSON-serializable event details.
     ``actor_id``    — identity of the actor who triggered the event.
     ``timestamp``   — ISO-8601 UTC timestamp.
-    ``prev_hash``   — SHA-256 hex of the previous entry's canonical form.
-    ``entry_hash``  — SHA-256 hex of this entry (excluding ``entry_hash``).
+    ``prev_hash``   — SHA3-512 hex of the previous entry's canonical form.
+    ``entry_hash``  — SHA3-512 hex of this entry (excluding ``entry_hash``).
     """
 
     entry_id: int
@@ -51,7 +51,7 @@ class LedgerEntry:
 
     def compute_hash(self) -> str:
         """Compute the hash for this entry (excluding entry_hash itself)."""
-        return sha256_object(self.to_dict())
+        return hash_object(self.to_dict())
 
     def verify(self) -> None:
         """Raise AuditTamperedError if the stored hash doesn't match."""
