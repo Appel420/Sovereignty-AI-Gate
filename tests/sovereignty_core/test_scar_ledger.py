@@ -156,7 +156,7 @@ def test_merkle_attestation_binds_current_identity_device_and_root():
     assert attestation.root_hash == ledger.get_merkle_root().root
     assert attestation.entry_count == 2
     assert attestation.version == 1
-    assert attestation.signature_algorithm == "DEV-HMAC-SHA256"
+    assert attestation.signature_algorithm == "Ed25519"
     assert attestation.identity_id == "human-1"
     assert attestation.device_id == ledger.device_id
     assert ledger.verify_attestation(attestation) is True

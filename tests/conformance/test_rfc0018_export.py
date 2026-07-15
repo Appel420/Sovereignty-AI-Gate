@@ -10,7 +10,7 @@ from sia.export.models import ExportBundle
 from sia.export.validator import validate_bundle
 from sia.errors import codes
 from sia.errors.exceptions import ExportError
-from sia.utils.hashing import sha256_object
+from sia.utils.hashing import hash_object
 
 FIXTURES = Path(__file__).parent.parent / "fixtures"
 
@@ -37,7 +37,7 @@ def test_export_payload_hash_mismatch():
 
 def test_export_missing_bundle_id():
     payload = {"data": "x"}
-    h = sha256_object(payload)
+    h = hash_object(payload)
     bundle = ExportBundle(
         bundle_id="",  # empty
         created_by="user:alice",
@@ -52,7 +52,7 @@ def test_export_missing_bundle_id():
 
 def test_export_roundtrip():
     payload = {"boundaries": [], "version": "0.1.0"}
-    h = sha256_object(payload)
+    h = hash_object(payload)
     bundle = ExportBundle(
         bundle_id="e002",
         created_by="user:alice",

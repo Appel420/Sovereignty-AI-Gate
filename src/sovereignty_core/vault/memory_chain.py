@@ -80,7 +80,7 @@ class MemoryBlock:
 class MemoryChain:
     """In-memory append-only chain of tamper-evident memory blocks."""
 
-    GENESIS_HASH = "0" * 64
+    GENESIS_HASH = "0" * 128
 
     def __init__(self, blocks: list[MemoryBlock] | None = None) -> None:
         self._blocks = list(blocks or [])
@@ -201,4 +201,4 @@ class MemoryChain:
 
     @staticmethod
     def _hash_bytes(data: bytes) -> str:
-        return hashlib.sha256(data).hexdigest()
+        return hashlib.sha3_512(data).hexdigest()

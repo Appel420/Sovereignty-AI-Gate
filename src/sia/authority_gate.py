@@ -282,13 +282,14 @@ class DefaultAuthorityGate(AuthorityGate):
         )
 
 
-class LocalMockProvider(AIProvider):
+class LocalAuthorityProbeProvider(AIProvider):
+    """Explicit test probe; it performs no model inference or provider call."""
     def __init__(self) -> None:
         self._last_packet: AuthorizedContextPacket | None = None
 
     @property
     def provider_id(self) -> str:
-        return "local.mock"
+        return "local.authority-probe"
 
     @property
     def last_packet(self) -> AuthorizedContextPacket | None:
@@ -296,7 +297,7 @@ class LocalMockProvider(AIProvider):
 
     def execute(self, packet: AuthorizedContextPacket) -> dict[str, Any]:
         if not isinstance(packet, AuthorizedContextPacket) or not packet.authorized:
-            raise ValueError("local.mock requires an authorized context packet")
+            raise ValueError("local.authority-probe requires an authorized context packet")
 
         payload = packet.to_dict()
         forbidden_fields = {
@@ -311,7 +312,7 @@ class LocalMockProvider(AIProvider):
         }
         unexpected = forbidden_fields.intersection(payload)
         if unexpected:
-            raise ValueError("local.mock received forbidden authority material")
+            raise ValueError("local.authority-probe received forbidden authority material")
 
         self._last_packet = packet
         return {

@@ -2,7 +2,7 @@
 Tools: audit ledger.
 
 Appends JSON-lines audit records to a flat file and supports
-sequential read-back. Each entry includes a chained SHA-256 hash
+sequential read-back. Each entry includes a chained SHA3-512 hash
 so that tampering with any record invalidates all subsequent hashes.
 """
 from __future__ import annotations
@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any
 
 
-_GENESIS_HASH = "0" * 64
+_GENESIS_HASH = "0" * 128
 
 
 class AuditLedger:
@@ -46,7 +46,7 @@ class AuditLedger:
         }
         entry_bytes = json.dumps(entry, sort_keys=True).encode("utf-8")
         chain_input = (self._previous_hash + entry_bytes.decode("utf-8")).encode("utf-8")
-        ledger_hash = hashlib.sha256(chain_input).hexdigest()
+        ledger_hash = hashlib.sha3_512(chain_input).hexdigest()
         entry["ledger_hash"] = ledger_hash
         self._previous_hash = ledger_hash
         with self._path.open("a", encoding="utf-8") as fh:

@@ -8,7 +8,7 @@ from typing import Any, Iterable, Sequence
 from sia.delegation.models import DelegationToken
 from sia.memory.models import MemoryRecord
 from sia.security.authority_policy import AuthorityPolicy
-from sia.utils.hashing import sha256_object
+from sia.utils.hashing import hash_object
 from sovereignty_core.audit.scar import SCARActor, SCARLedger
 from sovereignty_core.identity.identity import DeviceBinding, HumanIdentity
 from sovereignty_core.identity.root_of_trust import RootOfTrust, SoftwareTrustBackend
@@ -220,7 +220,7 @@ class CapabilityAdapter:
 class PolicyAdapter(Policy):
     def __init__(self, policy: AuthorityPolicy) -> None:
         self._policy = policy
-        self._policy_hash = sha256_object(self._policy.to_dict())
+        self._policy_hash = hash_object(self._policy.to_dict())
 
     @property
     def policy_hash(self) -> str:
@@ -253,11 +253,12 @@ class PolicyAdapter(Policy):
 class EvidenceLedgerAdapter(Evidence):
     def __init__(self, *, identity_id: str, root_of_trust: RootOfTrust) -> None:
         self._ledger = SCARLedger(identity_id=identity_id, root_of_trust=root_of_trust)
+        self._signing_algorithm = root_of_trust.backend.algorithm
         self._dev_mode = not root_of_trust.identity.hardware_backed
         if self._dev_mode:
             print(
-                "[DEV] EvidenceLedgerAdapter: audit evidence is signed with "
-                f"DEV-HMAC-SHA256 (software backend). "
+                "EvidenceLedgerAdapter: audit evidence is signed by a "
+                f"software {root_of_trust.backend.algorithm} backend. "
                 "This is NOT hardware-backed attestation. "
                 "Production deployments must use a hardware-backed TrustBackend.",
                 file=sys.stderr,
@@ -292,11 +293,11 @@ class EvidenceLedgerAdapter(Evidence):
         bundle = self._ledger.export_audit_bundle()
         if self._dev_mode:
             bundle = dict(bundle)
-            bundle["dev_mode"] = True
-            bundle["signing_algorithm"] = "DEV-HMAC-SHA256"
-            bundle["dev_warning"] = (
-                "[DEV] This audit bundle was signed with DEV-HMAC-SHA256. "
-                "It does not carry production cryptographic assurance."
+            bundle["hardware_backed"] = False
+            bundle["signing_algorithm"] = self._signing_algorithm
+            bundle["hardware_warning"] = (
+                "This audit bundle is signed with a real software key but does not "
+                "carry hardware-backed attestation."
             )
         return bundle
 
@@ -360,7 +361,7 @@ class DefaultMemoryFirewall(MemoryFirewall):
             "resource_id": request.resource_id,
         }
         return AuthorizedContextPacket(
-            packet_id=sha256_object(packet_payload),
+            packet_id=hash_object(packet_payload),
             provider_id=provider_id,
             owner_identity=request.identity.identity_id,
             capability_id=decision.capability_id,

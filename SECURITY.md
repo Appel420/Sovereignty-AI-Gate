@@ -33,7 +33,7 @@ This project enforces the following non-negotiable security rules:
 4. **No non-deterministic entropy** in the authority pipeline. `Math.random()` is banned.
 5. **No secrets in source code.** Any key material found in the codebase is a critical bug.
 6. **Encrypted memory at rest.** User memory files are AES-256-GCM encrypted before storage.
-7. **Audit immutability.** Ledger entries use chained SHA-256 hashes; any tampering breaks
+7. **Audit immutability.** Ledger entries use chained SHA3-512 hashes; any tampering breaks
    the chain and is detected at startup.
 
 ## Scope

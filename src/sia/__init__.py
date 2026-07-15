@@ -11,7 +11,7 @@ from sia.authority_gate import (
     AuthorizationDecision,
     AuthorizedContextPacket,
     IdentityContext,
-    LocalMockProvider,
+    LocalAuthorityProbeProvider,
     OperationRequest,
     ProtectedOperation,
 )
@@ -20,7 +20,7 @@ __all__ = [
     "AuthorizationDecision",
     "AuthorizedContextPacket",
     "IdentityContext",
-    "LocalMockProvider",
+    "LocalAuthorityProbeProvider",
     "OperationRequest",
     "ProtectedOperation",
     "SovereignAuthority",

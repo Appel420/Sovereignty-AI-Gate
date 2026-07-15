@@ -61,9 +61,9 @@ def test_canonicalize_sorts_keys():
     assert canonicalize(e1) == canonicalize(e2)
 
 
-def test_hash_entry_is_64_hex_chars():
+def test_hash_entry_is_128_hex_chars():
     h = hash_entry(_entry(0))
-    assert len(h) == 64
+    assert len(h) == 128
     assert all(c in "0123456789abcdef" for c in h)
 
 
@@ -75,14 +75,14 @@ def test_hash_entry_differs_for_different_entries():
     assert hash_entry(_entry(0)) != hash_entry(_entry(1))
 
 
-def test_hash_pair_is_64_hex_chars():
-    h = hash_pair("a" * 64, "b" * 64)
-    assert len(h) == 64
+def test_hash_pair_is_128_hex_chars():
+    h = hash_pair("a" * 128, "b" * 128)
+    assert len(h) == 128
 
 
 def test_hash_pair_is_not_commutative():
-    h1 = hash_pair("a" * 64, "b" * 64)
-    h2 = hash_pair("b" * 64, "a" * 64)
+    h1 = hash_pair("a" * 128, "b" * 128)
+    h2 = hash_pair("b" * 128, "a" * 128)
     assert h1 != h2
 
 
@@ -213,7 +213,7 @@ def test_proof_tampered_leaf_rejected():
     tree = build_merkle_from_scarlog(_scarlog(4))
     proof = generate_proof(tree, 1)
     bad_proof = type(proof)(
-        leaf_hash="0" * 64,
+        leaf_hash="0" * 128,
         siblings=proof.siblings,
         root=proof.root,
     )
@@ -229,7 +229,7 @@ def test_proof_wrong_root_rejected():
     bad_proof = type(proof)(
         leaf_hash=proof.leaf_hash,
         siblings=proof.siblings,
-        root="f" * 64,
+        root="f" * 128,
     )
     assert verify_merkle_proof(bad_proof) is False
 
@@ -282,4 +282,4 @@ def test_audit_ledger_bridge_proof_verifies():
 
 def test_tree_algorithm_field():
     tree = build_merkle_from_scarlog(_scarlog(2))
-    assert tree.algorithm == "SHA-256"
+    assert tree.algorithm == "SHA3-512"

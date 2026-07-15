@@ -44,7 +44,6 @@ from sia.providers.router import ProviderRouter
 from sia.security.authority_policy import AuthorityPolicy
 from sia.security.boundary_registry import BoundaryRegistry, BoundaryType
 from sia.tools.models import _issue_tool_execution_context
-from sia.utils.hashing import sha256_object
 
 __version__ = "0.1.0"
 

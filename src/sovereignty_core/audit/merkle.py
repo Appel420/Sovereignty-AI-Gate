@@ -21,7 +21,7 @@ Non-responsibilities:
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from hashlib import sha256
+from hashlib import sha3_512
 from typing import TYPE_CHECKING, Any
 
 from sia.utils.canonical import canonical_bytes
@@ -39,7 +39,7 @@ class MerkleProof:
     """
     Inclusion proof for a single SCAR log leaf.
 
-    ``leaf_hash``  — SHA-256 hex of the leaf entry.
+    ``leaf_hash``  — SHA3-512 hex of the leaf entry.
     ``siblings``   — ordered list of (direction, sibling_hash) pairs
                      walking from the leaf up to the root.
     ``root``       — expected Merkle root after applying the proof path.
@@ -64,7 +64,7 @@ class MerkleTree:
     root: str
     leaves: list[str]
     levels: list[list[str]]
-    algorithm: str = "SHA-256"
+    algorithm: str = "SHA3-512"
 
 
 # ── Canonicalization ─────────────────────────────────────────────────────────
@@ -85,7 +85,7 @@ def canonicalize(entry: dict[str, Any]) -> bytes:
 
 def hash_entry(entry: dict[str, Any]) -> str:
     """Hash one SCAR entry dict to a hex string."""
-    return sha256(canonicalize(entry)).hexdigest()
+    return sha3_512(canonicalize(entry)).hexdigest()
 
 
 def hash_pair(left: str, right: str) -> str:
@@ -96,7 +96,7 @@ def hash_pair(left: str, right: str) -> str:
     hashing, matching standard binary Merkle conventions.
     """
     payload = f"{left}{right}".encode("utf-8")
-    return sha256(payload).hexdigest()
+    return sha3_512(payload).hexdigest()
 
 
 # ── Tree construction ────────────────────────────────────────────────────────
@@ -140,7 +140,7 @@ def build_merkle_from_scarlog(
             "timestamp": "2026-07-14T02:24:00Z",
             "event": "MEMORY_APPEND",
             "actor": "device_key_id",
-            "payload_hash": "<sha256-hex>",
+            "payload_hash": "<sha3-512-hex>",
             "signature": "<hex>"
         }
 
@@ -156,7 +156,7 @@ def build_merkle_from_scarlog(
 
     SCAR LOG
        |
-       | SHA-256 (canonical JSON)
+       | SHA3-512 (canonical JSON)
        v
     Leaf Hashes
        |

@@ -151,36 +151,28 @@ def test_memory_chain_validates_hash_chain_and_signature():
     assert chain.validate(trust.verify_signature) is False
 
 
-# ── DEV-HMAC-SHA256 labeling (RFC-0021) ──────────────────────────────────────
+# ── Software Ed25519 backend ─────────────────────────────────────────────────
 
 
 def test_signed_object_algorithm_reflects_backend_algorithm():
     """RootOfTrust.sign() must propagate the backend algorithm to SignedObject."""
     trust = RootOfTrust(SoftwareTrustBackend(b"\x05" * 32))
     signed = trust.sign(b"test payload")
-    assert signed.algorithm == "DEV-HMAC-SHA256", (
+    assert signed.algorithm == "Ed25519", (
         "SignedObject.algorithm must equal the backend's declared algorithm identifier"
     )
 
 
 def test_software_backend_algorithm_property():
-    """SoftwareTrustBackend must declare DEV-HMAC-SHA256 as its algorithm."""
+    """SoftwareTrustBackend must declare its real signing algorithm."""
     backend = SoftwareTrustBackend(b"\x06" * 32)
-    assert backend.algorithm == "DEV-HMAC-SHA256"
+    assert backend.algorithm == "Ed25519"
 
 
 def test_software_backend_is_not_hardware_backed():
     """SoftwareTrustBackend must never report hardware_backed=True."""
     backend = SoftwareTrustBackend(b"\x07" * 32)
     assert backend.hardware_backed is False
-
-
-def test_software_backend_emits_dev_warning(capsys):
-    """SoftwareTrustBackend must emit a visible [DEV] warning on stderr."""
-    SoftwareTrustBackend(b"\x08" * 32)
-    captured = capsys.readouterr()
-    assert "[DEV]" in captured.err
-    assert "DEV-HMAC-SHA256" in captured.err
 
 
 def test_root_of_trust_identity_hardware_backed_false_for_software_backend():

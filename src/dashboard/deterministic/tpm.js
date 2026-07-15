@@ -1,5 +1,5 @@
 /**
- * tpm.js — Deterministic TPM PCR sealing helpers.
+ * tpm.js — Software measurement helpers; this module does not claim TPM access.
  *
  * All entropy comes from crypto.getRandomValues() or is derived
  * deterministically from system state. Non-deterministic entropy is NEVER used.
@@ -9,21 +9,22 @@
 
 const tpm = (() => {
   /**
-   * Generate a deterministic PCR-like measurement by hashing input bytes.
+   * Generate a software measurement by hashing input bytes.
    * @param {Uint8Array} inputBytes
-   * @returns {Promise<string>} hex-encoded SHA-256 digest
+   * @returns {Promise<string>} hex-encoded SHA-512 digest
    */
   async function measureBytes(inputBytes) {
-    const digest = await crypto.subtle.digest("SHA-256", inputBytes);
+    const digest = await crypto.subtle.digest("SHA-512", inputBytes);
     return Array.from(new Uint8Array(digest))
       .map((b) => b.toString(16).padStart(2, "0"))
       .join("");
   }
 
   /**
-   * Extend a PCR value: PCR_new = SHA256(PCR_old || measurement)
-   * @param {string} currentPcrHex  current PCR hex string (64 chars)
-   * @param {string} measurementHex new measurement hex string (64 chars)
+   * Extend a software measurement: new = SHA-512(current || measurement).
+   * This does not access or attest a hardware TPM.
+   * @param {string} currentPcrHex current measurement hex string (128 chars)
+   * @param {string} measurementHex new measurement hex string (128 chars)
    * @returns {Promise<string>} new PCR hex string
    */
   async function extendPcr(currentPcrHex, measurementHex) {

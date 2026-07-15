@@ -9,7 +9,7 @@ from sia import SovereignAuthority
 from sia.delegation.models import DelegationToken
 from sia.memory.models import MemoryRecord
 from sia.imports.models import ImportBundle
-from sia.utils.hashing import sha256_object
+from sia.utils.hashing import hash_object
 
 
 @pytest.fixture
@@ -50,7 +50,7 @@ def test_pipeline_memory_store_and_read(sa):
 
 def test_pipeline_export(sa):
     payload = {"boundaries": [], "version": "0.1.0"}
-    h = sha256_object(payload)
+    h = hash_object(payload)
     sig = "a" * 128
     bundle = sa.create_export("exp-001", payload, h, sig)
     assert bundle.bundle_id == "exp-001"
@@ -58,7 +58,7 @@ def test_pipeline_export(sa):
 
 def test_pipeline_import(sa):
     payload = {"boundaries": [], "version": "0.1.0"}
-    h = sha256_object(payload)
+    h = hash_object(payload)
     bundle = ImportBundle(
         bundle_id="imp-001",
         created_by="user:bob",

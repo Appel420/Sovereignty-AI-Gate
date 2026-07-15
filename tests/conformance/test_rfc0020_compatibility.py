@@ -10,7 +10,7 @@ from sia import SovereignAuthority
 from sia.delegation.models import DelegationToken
 from sia.memory.models import MemoryRecord
 from sia.imports.models import ImportBundle
-from sia.utils.hashing import sha256_object
+from sia.utils.hashing import hash_object
 
 
 def test_full_compatibility_pipeline():
@@ -40,7 +40,7 @@ def test_full_compatibility_pipeline():
     producer.store_memory(mem)
 
     payload = {"test": "compat", "version": "0.1.0"}
-    h = sha256_object(payload)
+    h = hash_object(payload)
     exported = producer.create_export("compat-exp-001", payload, h, "f" * 128)
 
     # Producer ledger must be intact

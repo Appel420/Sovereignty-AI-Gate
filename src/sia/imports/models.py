@@ -24,7 +24,7 @@ class ImportBundle:
     ``bundle_id``       — unique identifier (matches the originating ExportBundle).
     ``created_by``      — identity of the exporting operator.
     ``payload``         — the exported data (authority records, etc.).
-    ``payload_hash``    — SHA-256 hex of the canonical payload.
+    ``payload_hash``    — SHA3-512 hex of the canonical payload.
     ``signature``       — hex-encoded signature over payload_hash.
     ``created_at``      — ISO-8601 UTC timestamp.
     ``schema_version``  — wire format version.
