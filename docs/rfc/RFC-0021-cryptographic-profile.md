@@ -9,7 +9,8 @@
 ## Abstract
 
 Defines the cryptographic algorithm profiles that SIA implementations MUST use for
-signatures, key management, and integrity. Two profiles are defined:
+signatures, key management, and integrity. Two signature profiles and one
+mandatory integrity profile are defined:
 
 - **Ed25519** — software and hardware-backed asymmetric signatures.
 - **ML-DSA-87** — post-quantum asymmetric signatures where available.
@@ -40,7 +41,7 @@ deterministically.
 | **Key ID format** | `ed25519:<base64url(SHA3-512(public_key)[:12])>` |
 | **Rotation** | Rotate on: scheduled interval (≤ 365 days), compromise indicator, hardware re-provisioning |
 | **Revocation** | Add key ID to identity's revocation list; revocation is append-only and SCAR-audited |
-| **Downgrade prevention** | Attestation records MUST include `signature_algorithm`; verifiers MUST reject DEV profile in production context |
+| **Downgrade prevention** | Attestation records MUST include `signature_algorithm`; verifiers MUST reject unknown, symmetric, and SHA-256-based profiles |
 | **Hardware binding** | Private key MUST reside in a hardware-backed secure enclave when available (TPM 2.0, Apple Secure Enclave, Android StrongBox) |
 
 ### Profile 2: ML-DSA-87 (Post-Quantum)
