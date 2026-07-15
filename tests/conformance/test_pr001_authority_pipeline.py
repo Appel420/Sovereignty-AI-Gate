@@ -397,3 +397,48 @@ def test_audit_chain_verifies():
     assert denied.allowed is False
     assert granted.allowed is True
     assert authority.verify_authority_evidence() is True
+
+
+# ── DEV-HMAC-SHA256 / hardware_backed guards (RFC-0021) ──────────────────────
+
+
+def test_identity_context_hardware_backed_false_for_software_authority():
+    """
+    SovereignAuthority backed by SoftwareTrustBackend must produce
+    IdentityContext with hardware_backed=False.
+
+    This ensures production gates can detect and reject software-backed
+    identities when hardware attestation is required.
+    """
+    authority = make_authority(ProtectedOperation.EXECUTE_TOOL)
+    context = authority._identity.identity_context()
+    assert context.hardware_backed is False, (
+        "Software-backed authority must expose hardware_backed=False "
+        "so production gates can enforce hardware attestation requirements."
+    )
+
+
+def test_evidence_bundle_carries_dev_mode_label(capsys):
+    """
+    When using SoftwareTrustBackend, the exported audit bundle must include
+    a dev_mode=True label and a signing_algorithm field per RFC-0021.
+    """
+    authority = make_authority(ProtectedOperation.EXECUTE_TOOL)
+    capability = make_delegation(["tool.execute"])
+    authority.authorize_operation(
+        authority.make_operation_request(
+            ProtectedOperation.EXECUTE_TOOL,
+            capability=capability,
+            resource_id="tool:test",
+        )
+    )
+    bundle = authority._authority_evidence.export_bundle()
+    assert bundle.get("dev_mode") is True, (
+        "Audit bundles from software-backed authority must declare dev_mode=True"
+    )
+    assert bundle.get("signing_algorithm") == "DEV-HMAC-SHA256", (
+        "Audit bundle must declare the actual signing algorithm"
+    )
+    assert "[DEV]" in bundle.get("dev_warning", ""), (
+        "Audit bundle must include a human-readable [DEV] warning"
+    )

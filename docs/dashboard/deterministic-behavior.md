@@ -23,5 +23,12 @@ This hash changes deterministically with state mutations.
 
 ## TPM PCR Simulation
 
-`tpm.js` simulates TPM PCR measurement by hashing input bytes with SHA-256.
-When a hardware TPM is available, it can be substituted without changing the interface.
+> **[DEV/SOFTWARE SIMULATION]** `tpm.js` implements PCR-style measurements in
+> software using `crypto.subtle.digest("SHA-256", ...)`. This is **not** hardware TPM
+> attestation. It does not bind measurements to a hardware root of trust and must not
+> be represented as such.
+
+`tpm.js` provides a deterministic, testable PCR-measurement interface. When a real
+hardware TPM 2.0 backend is integrated, it can satisfy the same interface contract.
+Until then, all PCR values produced by this module are software-computed and carry no
+hardware attestation guarantee.

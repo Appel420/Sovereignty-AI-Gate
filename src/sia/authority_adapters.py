@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Iterable, Sequence
@@ -65,6 +66,7 @@ class IdentityAdapter(IdentityVerifier):
             identity_id=self.owner_identity.identity_id,
             device_id=self.root_of_trust.identity.identity_id,
             verified=True,
+            hardware_backed=self.root_of_trust.identity.hardware_backed,
             metadata={"authority_source": self.owner_identity.authority_source.value},
         )
 
@@ -251,6 +253,15 @@ class PolicyAdapter(Policy):
 class EvidenceLedgerAdapter(Evidence):
     def __init__(self, *, identity_id: str, root_of_trust: RootOfTrust) -> None:
         self._ledger = SCARLedger(identity_id=identity_id, root_of_trust=root_of_trust)
+        self._dev_mode = not root_of_trust.identity.hardware_backed
+        if self._dev_mode:
+            print(
+                "[DEV] EvidenceLedgerAdapter: audit evidence is signed with "
+                f"DEV-HMAC-SHA256 (software backend). "
+                "This is NOT hardware-backed attestation. "
+                "Production deployments must use a hardware-backed TrustBackend.",
+                file=sys.stderr,
+            )
 
     @property
     def ledger(self) -> SCARLedger:
@@ -278,7 +289,16 @@ class EvidenceLedgerAdapter(Evidence):
         return self._ledger.verify_integrity()
 
     def export_bundle(self) -> dict[str, Any]:
-        return self._ledger.export_audit_bundle()
+        bundle = self._ledger.export_audit_bundle()
+        if self._dev_mode:
+            bundle = dict(bundle)
+            bundle["dev_mode"] = True
+            bundle["signing_algorithm"] = "DEV-HMAC-SHA256"
+            bundle["dev_warning"] = (
+                "[DEV] This audit bundle was signed with DEV-HMAC-SHA256. "
+                "It does not carry production cryptographic assurance."
+            )
+        return bundle
 
 
 class VaultAdapter:

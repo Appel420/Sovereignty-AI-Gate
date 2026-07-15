@@ -25,6 +25,13 @@ class IdentityContext:
     identity_id: str
     device_id: str | None = None
     verified: bool = False
+    hardware_backed: bool = False
+    """
+    True only when the backing trust material resides in secure hardware
+    (TPM 2.0, Apple Secure Enclave, Android StrongBox, or equivalent).
+    Production authority gates MUST reject requests where this is False
+    when operating in a production context.
+    """
     metadata: dict[str, Any] = field(default_factory=dict)
 
 

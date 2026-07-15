@@ -5,10 +5,17 @@ The root layer defines the stable contract that higher SAMA layers depend
 on. It does not pretend to be a production cryptographic implementation.
 Production deployments should supply platform-backed adapters that keep
 root material inside a secure device boundary.
+
+Development cryptography:
+  SoftwareTrustBackend uses DEV-HMAC-SHA256 (HMAC-SHA256 over a session
+  secret). This profile is development-only. It MUST NOT be used in
+  production authority paths. A visible [DEV] warning is emitted to stderr
+  whenever this backend is instantiated, per RFC-0021.
 """
 
 from __future__ import annotations
 
+import sys
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 import hashlib
@@ -59,6 +66,17 @@ class TrustBackend(ABC):
     def hardware_backed(self) -> bool:
         """Return whether the backend is backed by secure hardware."""
 
+    @property
+    @abstractmethod
+    def algorithm(self) -> str:
+        """
+        Return the signing algorithm identifier for this backend.
+
+        Development backends return ``"DEV-HMAC-SHA256"``.
+        Production backends return a standard identifier such as
+        ``"Ed25519"`` or ``"ML-DSA-87"``.
+        """
+
     @abstractmethod
     def public_key_bytes(self) -> bytes:
         """Return public root material that is safe to expose."""
@@ -91,10 +109,24 @@ class SoftwareTrustBackend(TrustBackend):
 
     This backend is intentionally explicit and human-readable. It is suitable
     for local testing only and must not be treated as a hardware root.
+
+    [DEV] WARNING: This backend uses DEV-HMAC-SHA256, which is not a
+    public-key scheme and provides no hardware-backed attestation. It MUST
+    NOT be used in production authority paths. A warning is printed to
+    stderr on instantiation.
     """
+
+    _DEV_ALGORITHM = "DEV-HMAC-SHA256"
 
     def __init__(self, root_secret: bytes | None = None) -> None:
         self._root_secret = root_secret or secrets.token_bytes(32)
+        print(
+            "[DEV] SoftwareTrustBackend activated — algorithm: DEV-HMAC-SHA256. "
+            "This backend is development-only and MUST NOT be used in production "
+            "authority paths. Replace with a hardware-backed TrustBackend for "
+            "production deployments.",
+            file=sys.stderr,
+        )
 
     @property
     def backend_name(self) -> str:
@@ -103,6 +135,10 @@ class SoftwareTrustBackend(TrustBackend):
     @property
     def hardware_backed(self) -> bool:
         return False
+
+    @property
+    def algorithm(self) -> str:
+        return self._DEV_ALGORITHM
 
     def public_key_bytes(self) -> bytes:
         return hashlib.sha256(b"SAMA_ROOT_PUBLIC:" + self._root_secret).digest()
@@ -216,6 +252,7 @@ class RootOfTrust:
             signature=signature,
             signer=self.identity.identity_id,
             timestamp=int(time.time()),
+            algorithm=self._backend.algorithm,
         )
 
     def verify(self, payload: bytes, signed: SignedObject) -> bool:
