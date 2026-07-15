@@ -107,6 +107,42 @@ The repository is organized so that the authority protocol, core primitives, das
 | `deploy/` | Docker, Nginx, and Kubernetes deployment assets. Review these as deployment configuration; they do not replace the offline local workflow. |
 | Root policy files | `CHARTER.md`, `ARCHITECTURE_RULES.md`, `SECURITY.md`, `CONTRIBUTING.md`, and `PLAYGROUND.md` define project governance, security, contribution, and collaboration expectations. |
 
+### Project Tree
+
+```text
+.
+├── .github/
+│   └── workflows/             # Python, conformance, and dashboard CI checks
+├── deploy/
+│   ├── docker/                # Container image and Compose configuration
+│   └── nginx/                 # Reverse-proxy configuration
+├── docs/
+│   ├── architecture/          # Architecture decisions and system models
+│   ├── conformance/           # Test matrix and failure-code reference
+│   └── rfc/                   # Current protocol RFCs
+├── RFC/                       # Legacy RFC records and implementation plans
+├── scripts/                   # Bootstrap, test, lint, conformance, and release helpers
+├── src/
+│   ├── dashboard/             # Local deterministic dashboard
+│   ├── sia/                   # Authority-gate protocol implementation
+│   └── sovereignty_core/      # Identity, permissions, vault, and audit primitives
+├── tests/
+│   ├── conformance/           # Protocol conformance tests
+│   ├── dashboard/             # Dashboard determinism tests
+│   ├── fixtures/              # Reusable protocol test data
+│   ├── governance/            # Authority-boundary governance tests
+│   └── sovereignty_core/      # Core primitive tests
+├── ARCHITECTURE_RULES.md
+├── CHARTER.md
+├── CONTRIBUTING.md
+├── PLAYGROUND.md
+├── README.md
+├── SECURITY.md
+├── mcp_server.py              # Governed MCP server entry point
+├── package.json               # Dashboard tooling
+└── pyproject.toml             # Python package and test configuration
+```
+
 ### Authority Protocol Modules
 
 | Module | Responsibility |
