@@ -248,6 +248,32 @@ def test_workspace_read_succeeds_after_authorization_and_records_evidence(tmp_pa
     assert event.payload["failure_reason"] is None
 
 
+def test_workspace_list_is_governed_and_filters_sensitive_files(tmp_path: Path) -> None:
+    (tmp_path / "notes.txt").write_text("local data", encoding="utf-8")
+    (tmp_path / ".env").write_text("TOKEN=private", encoding="utf-8")
+    server, authority = make_server(
+        tmp_path,
+        policy=allow_policy(ProtectedOperation.WORKSPACE_LIST),
+    )
+
+    result = tool_text(
+        server,
+        "workspace_list",
+        identity=identity_payload(authority),
+        capability=capability_payload(
+            authority,
+            capability_id="cap-list",
+            scopes=["workspace.list"],
+        ),
+    )
+
+    event = last_mcp_event(authority)
+    assert result["files"] == ["notes.txt"]
+    assert result["truncated"] is False
+    assert event.payload["operation"] == ProtectedOperation.WORKSPACE_LIST.value
+    assert event.payload["result"] == "success"
+
+
 def test_workspace_execution_failures_are_rejected_and_recorded(tmp_path: Path) -> None:
     (tmp_path / "notes.txt").write_text("local data", encoding="utf-8")
     (tmp_path / ".env").write_text("TOKEN=private", encoding="utf-8")
