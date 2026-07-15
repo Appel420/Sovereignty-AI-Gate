@@ -121,3 +121,17 @@ class AuditRecorder:
             actor_id=event.context.subject_id,
             timestamp=event.context.timestamp,
         )
+
+    def record_mcp_operation(
+        self,
+        *,
+        actor_id: str,
+        event_type: str,
+        payload: dict[str, Any],
+    ) -> None:
+        """Append authority-owned evidence for a governed MCP operation."""
+        self._ledger.append(
+            event_type,
+            dict(payload),
+            actor_id=actor_id,
+        )

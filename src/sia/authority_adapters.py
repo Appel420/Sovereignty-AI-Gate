@@ -97,6 +97,10 @@ class CapabilityAdapter:
         ProtectedOperation.CALL_PROVIDER: frozenset(
             {"provider.call", "READ_CONTEXT_WINDOW"}
         ),
+        ProtectedOperation.WORKSPACE_LIST: frozenset({"workspace.list"}),
+        ProtectedOperation.WORKSPACE_READ: frozenset({"workspace.read"}),
+        ProtectedOperation.WORKSPACE_ANALYZE: frozenset({"workspace.analyze"}),
+        ProtectedOperation.WORKSPACE_REPO_STATUS: frozenset({"workspace.repo_status"}),
     }
 
     def adapt(self, capability: Any | None) -> CapabilityRecord | None:
