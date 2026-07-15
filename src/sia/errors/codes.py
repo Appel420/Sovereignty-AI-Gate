@@ -56,6 +56,11 @@ E_REGISTRY_DUPLICATE = "E7001"
 E_REGISTRY_CONVERSION_DENIED = "E7002"
 E_REGISTRY_CREATOR_LOCKED = "E7003"
 
+# Provider errors
+E_BANNED_PROVIDER = "E8000"
+E_PROVIDER_CONFIG = "E8001"
+E_PROVIDER_CALL_FAILED = "E8002"
+
 # Code descriptions
 DESCRIPTIONS: dict[str, str] = {
     E_UNKNOWN: "Unknown error",
@@ -93,6 +98,9 @@ DESCRIPTIONS: dict[str, str] = {
     E_REGISTRY_DUPLICATE: "Boundary already registered",
     E_REGISTRY_CONVERSION_DENIED: "Boundary type conversion is not permitted",
     E_REGISTRY_CREATOR_LOCKED: "Creator boundary is locked and cannot be modified",
+    E_BANNED_PROVIDER: "Provider is on the banned list and cannot be used",
+    E_PROVIDER_CONFIG: "Provider configuration is missing or invalid (API key not found)",
+    E_PROVIDER_CALL_FAILED: "Provider HTTP call failed",
 }
 
 

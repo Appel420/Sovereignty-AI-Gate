@@ -168,7 +168,16 @@ class CapabilityAdapter:
                 capability_id=adapted.capability_id,
             )
 
-        required_scopes = self.OPERATION_SCOPES[ProtectedOperation(request.operation)]
+        try:
+            op = ProtectedOperation(request.operation)
+        except ValueError:
+            return CapabilityVerification(
+                allowed=False,
+                reason_code="UNKNOWN_OPERATION",
+                reason=f"Unknown operation: {request.operation}",
+                capability_id=adapted.capability_id,
+            )
+        required_scopes = self.OPERATION_SCOPES[op]
         if adapted.scopes.isdisjoint(required_scopes):
             return CapabilityVerification(
                 allowed=False,

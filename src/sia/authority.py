@@ -8,8 +8,10 @@ import/export, and conformance harness.
 from __future__ import annotations
 
 from typing import Any, Sequence
+from uuid import uuid4
 
 from sia.audit.ledger import AuditLedger
+from sia.audit.provider_events import ProviderEventType, create_provider_scar_event
 from sia.audit.recorder import AuditRecorder
 from sia.authority_adapters import (
     CapabilityAdapter,
@@ -26,6 +28,7 @@ from sia.authority_gate import (
     IdentityContext,
     OperationRequest,
 )
+from sia.context.request_context import RequestContext
 from sia.conformance.harness import ConformanceHarness
 from sia.delegation.authorizer import DelegationAuthorizer
 from sia.delegation.models import DelegationToken
@@ -36,6 +39,7 @@ from sia.imports.loader import BundleLoader
 from sia.imports.models import ImportBundle
 from sia.memory.models import MemoryRecord
 from sia.memory.validator import assert_read_access, validate_record
+from sia.providers.router import ProviderRouter
 from sia.security.authority_policy import AuthorityPolicy
 from sia.security.boundary_registry import BoundaryRegistry, BoundaryType
 from sia.utils.hashing import sha256_object
@@ -364,6 +368,7 @@ class SovereignAuthority:
         provider: AIProvider,
         record_ids: Sequence[str] = (),
     ) -> tuple[AuthorizationDecision, dict[str, Any] | None]:
+        """Authorize, route, execute, and evidence a provider invocation."""
         self._require_initialized()
         if request.provider_id != provider.provider_id:
             raise ValueError(
@@ -371,16 +376,103 @@ class SovereignAuthority:
                 f"the provider being executed ({provider.provider_id!r}). "
                 "Build the OperationRequest with the same provider_id."
             )
+
+        context = RequestContext.create(
+            request_id=str(uuid4()),
+            correlation_id=str(uuid4()),
+            session_id=self._owner_id,
+            operation=request.operation_name,
+            subject_id=self._owner_id,
+            capability_id=getattr(request.capability, "capability_id", None)
+            or getattr(request.capability, "token_id", None),
+            policy_hash="",
+        )
         decision = self.authorize_operation(request)
         if not decision.allowed:
+            self._record_provider_event(
+                ProviderEventType.FAILED,
+                context,
+                provider_id=request.provider_id,
+                error_code=decision.reason_code,
+                error_category="authorization",
+                retryable=False,
+            )
             return decision, None
+
+        context = RequestContext(
+            request_id=context.request_id,
+            correlation_id=context.correlation_id,
+            session_id=context.session_id,
+            operation=context.operation,
+            subject_id=context.subject_id,
+            capability_id=decision.capability_id,
+            policy_hash=decision.policy_hash,
+            timestamp=context.timestamp,
+            authority_sequence=context.authority_sequence,
+        )
+        context = self._advance_context(context, sequence=2)
         packet = self._memory_firewall.build_context_packet(
             request,
             decision,
             provider_id=provider.provider_id,
             memory_records=[self._memory[record_id] for record_id in record_ids],
         )
-        return decision, provider.execute(packet)
+        self._record_provider_event(
+            ProviderEventType.REQUESTED, context, provider_id=provider.provider_id
+        )
+
+        context = self._advance_context(context, sequence=3)
+        selected_provider = ProviderRouter(
+            {provider.provider_id: provider}
+        ).select(request, context)
+        self._record_provider_event(
+            ProviderEventType.APPROVED, context, provider_id=selected_provider.provider_id
+        )
+
+        context = self._advance_context(context, sequence=4)
+        try:
+            result = selected_provider.execute(packet)
+        except Exception as exc:
+            self._record_provider_event(
+                ProviderEventType.FAILED,
+                context,
+                provider_id=selected_provider.provider_id,
+                error_code=getattr(exc, "code", "UNKNOWN"),
+                error_category="execution",
+                retryable=getattr(exc, "retryable", False),
+            )
+            raise
+        self._record_provider_event(
+            ProviderEventType.COMPLETED, context, provider_id=selected_provider.provider_id
+        )
+        return decision, result
+
+    @staticmethod
+    def _advance_context(ctx: RequestContext, *, sequence: int) -> RequestContext:
+        """Return the next immutable authority context."""
+        return ctx.advance(sequence)
+
+    def _record_provider_event(
+        self,
+        event_type: ProviderEventType,
+        ctx: RequestContext,
+        *,
+        provider_id: str | None,
+        error_code: str | None = None,
+        error_category: str | None = None,
+        retryable: bool | None = None,
+    ) -> None:
+        """Record provider lifecycle evidence from the authority layer only."""
+        self._recorder.record_provider_scar_event(
+            create_provider_scar_event(
+                event_type=event_type,
+                ctx=ctx,
+                provider_id=provider_id or "unknown",
+                error_code=error_code,
+                error_category=error_category,
+                retryable=retryable,
+            )
+        )
 
     # ── Audit ─────────────────────────────────────────────────────────────────
 

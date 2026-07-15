@@ -156,3 +156,42 @@ class RegistryDuplicateError(SIAError):
 class CreatorLockedError(SIAError):
     def __init__(self, message: str | None = None) -> None:
         super().__init__(codes.E_REGISTRY_CREATOR_LOCKED, message)
+
+
+# ── Provider ───────────────────────────────────────────────────────────────────
+
+class BannedProviderError(SIAError):
+    """Raised when a banned provider is referenced."""
+
+    def __init__(self, provider_id: str, message: str | None = None) -> None:
+        self.provider_id = provider_id
+        super().__init__(
+            codes.E_BANNED_PROVIDER,
+            message or f"Provider '{provider_id}' is banned and cannot be used",
+        )
+
+
+class ProviderConfigError(SIAError):
+    """Raised when a provider API key or configuration is missing or invalid."""
+
+    def __init__(self, provider_id: str, message: str | None = None) -> None:
+        self.provider_id = provider_id
+        super().__init__(
+            codes.E_PROVIDER_CONFIG,
+            message or f"Provider '{provider_id}': API key not found in local vault",
+        )
+
+
+class ProviderCallError(SIAError):
+    """Raised when a provider HTTP call fails."""
+
+    def __init__(
+        self, provider_id: str, status: int | None = None, message: str | None = None
+    ) -> None:
+        self.provider_id = provider_id
+        self.status = status
+        detail = f" (HTTP {status})" if status is not None else ""
+        super().__init__(
+            codes.E_PROVIDER_CALL_FAILED,
+            message or f"Provider '{provider_id}' call failed{detail}",
+        )

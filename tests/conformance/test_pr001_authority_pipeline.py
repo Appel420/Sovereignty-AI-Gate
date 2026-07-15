@@ -320,6 +320,57 @@ def test_provider_receives_no_vault_or_keys():
     ]
 
 
+def test_provider_lifecycle_is_authority_owned_and_sequenced():
+    authority = make_authority(ProtectedOperation.CALL_PROVIDER)
+    provider = LocalMockProvider()
+    capability = make_delegation(["provider.call"], grantee_id=provider.provider_id)
+
+    decision, response = authority.call_provider_authorized(
+        authority.make_operation_request(
+            ProtectedOperation.CALL_PROVIDER,
+            capability=capability,
+            provider_id=provider.provider_id,
+        ),
+        provider=provider,
+    )
+
+    assert decision.allowed is True
+    assert response is not None
+    events = [
+        entry for entry in authority.ledger.all_entries()
+        if entry.event_type.startswith("provider.")
+    ]
+    assert [event.event_type for event in events] == [
+        "provider.requested",
+        "provider.approved",
+        "provider.completed",
+    ]
+    assert [event.payload["authority_sequence"] for event in events] == [2, 3, 4]
+    assert len({event.payload["correlation_id"] for event in events}) == 1
+    assert all(event.payload["provider_id"] == provider.provider_id for event in events)
+
+
+def test_denied_provider_call_records_authority_failure():
+    authority = make_authority(ProtectedOperation.CALL_PROVIDER)
+    provider = LocalMockProvider()
+
+    decision, response = authority.call_provider_authorized(
+        authority.make_operation_request(
+            ProtectedOperation.CALL_PROVIDER,
+            provider_id=provider.provider_id,
+        ),
+        provider=provider,
+    )
+
+    assert decision.allowed is False
+    assert response is None
+    event = authority.ledger.tail(1)[0]
+    assert event.event_type == "provider.failed"
+    assert event.payload["authority_sequence"] == 1
+    assert event.payload["error_category"] == "authorization"
+    assert event.payload["error_code"] == "MISSING_CAPABILITY"
+
+
 def test_audit_chain_verifies():
     authority = make_authority(ProtectedOperation.WRITE_MEMORY)
     denied = authority.authorize_operation(

@@ -50,7 +50,10 @@ class OperationRequest:
 
     @property
     def operation_name(self) -> str:
-        return ProtectedOperation(self.operation).value
+        try:
+            return ProtectedOperation(self.operation).value
+        except ValueError:
+            return str(self.operation)
 
 
 @dataclass(frozen=True)

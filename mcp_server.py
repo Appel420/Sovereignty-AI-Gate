@@ -154,7 +154,9 @@ class SovereignMCPServer:
 
     def _is_restricted(self, path: Path) -> bool:
         relative = path.relative_to(self.workspace)
-        return any(part.startswith(".") for part in relative.parts) or path.suffix.lower() in SENSITIVE_SUFFIXES
+        return any(
+            part.startswith(".") for part in relative.parts if part not in {".", ".."}
+        ) or path.suffix.lower() in SENSITIVE_SUFFIXES
 
     def _list_workspace(self, relative_path: Any) -> dict[str, Any]:
         directory = self.workspace if relative_path == "" else self._resolve_workspace_path(relative_path)

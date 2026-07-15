@@ -9,6 +9,7 @@ from __future__ import annotations
 from typing import Any
 
 from sia.audit.ledger import AuditLedger
+from sia.audit.provider_events import ProviderSCAREvent
 
 
 class AuditRecorder:
@@ -110,4 +111,13 @@ class AuditRecorder:
             "conformance.result",
             {"rfc": rfc, "passed": passed, "details": details or {}},
             actor_id=actor_id,
+        )
+
+    def record_provider_scar_event(self, event: ProviderSCAREvent) -> None:
+        """Append authority-owned evidence for a provider lifecycle event."""
+        self._ledger.append(
+            f"provider.{event.event_type.value}",
+            event.to_payload(),
+            actor_id=event.context.subject_id,
+            timestamp=event.context.timestamp,
         )
