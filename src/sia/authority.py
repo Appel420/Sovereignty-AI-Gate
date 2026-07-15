@@ -7,6 +7,7 @@ import/export, and conformance harness.
 """
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from typing import Any, Sequence
 from uuid import uuid4
 
@@ -42,6 +43,7 @@ from sia.memory.validator import assert_read_access, validate_record
 from sia.providers.router import ProviderRouter
 from sia.security.authority_policy import AuthorityPolicy
 from sia.security.boundary_registry import BoundaryRegistry, BoundaryType
+from sia.tools.models import _issue_tool_execution_context
 from sia.utils.hashing import sha256_object
 
 __version__ = "0.1.0"
@@ -348,18 +350,163 @@ class SovereignAuthority:
         requester: str = "",
         runtime_version: str = "",
     ) -> tuple[AuthorizationDecision, Any | None]:
+        """Authorize, issue a governed execution context, execute, and evidence.
+
+        Flow:
+          1. Authorize the operation via the AuthorityGate.
+          2. On denial → emit ``tool.operation.denied`` evidence and return.
+          3. Validate capability_id consistency between the decision and the
+             request.  Mismatch → ``tool.operation.rejected`` + CAPABILITY_CONTEXT_MISMATCH.
+          4. Issue a ``ToolExecutionContext`` via the authority-only factory.
+          5. Emit ``tool.operation.started`` evidence.
+          6. Call ``executor.execute_authorized(ctx)``.
+          7. On exception → emit ``tool.operation.failed`` evidence and re-raise.
+          8. Emit ``tool.operation.completed`` evidence.
+          9. Return ``(decision, result)``.
+        """
         self._require_initialized()
+        request_id = str(uuid4())
+        timestamp = datetime.now(timezone.utc).isoformat()
+        identity_id = (
+            request.identity.identity_id if request.identity is not None else None
+        )
+
         decision = self.authorize_operation(request)
+
         if not decision.allowed:
+            self._recorder.record_tool_operation(
+                actor_id=self._owner_id,
+                event_type="tool.operation.denied",
+                request_id=request_id,
+                authorization_id=str(decision.evidence_sequence)
+                if decision.evidence_sequence is not None
+                else None,
+                identity_id=identity_id,
+                capability_id=decision.capability_id,
+                tool_name=tool_name,
+                operation=request.operation_name,
+                decision="denied",
+                execution_status="denied",
+                failure_reason=decision.reason,
+                timestamp=timestamp,
+            )
             return decision, None
-        return decision, executor.execute(
-            tool_name,
-            args,
-            capability,
+
+        # ── Capability_id consistency ─────────────────────────────────────────
+        request_capability_id = getattr(request.capability, "capability_id", None) or getattr(
+            request.capability, "token_id", None
+        )
+        if (
+            request_capability_id is not None
+            and decision.capability_id is not None
+            and request_capability_id != decision.capability_id
+        ):
+            self._recorder.record_tool_operation(
+                actor_id=self._owner_id,
+                event_type="tool.operation.rejected",
+                request_id=request_id,
+                authorization_id=str(decision.evidence_sequence)
+                if decision.evidence_sequence is not None
+                else None,
+                identity_id=identity_id,
+                capability_id=decision.capability_id,
+                tool_name=tool_name,
+                operation=request.operation_name,
+                decision="rejected",
+                execution_status="rejected",
+                failure_reason="CAPABILITY_CONTEXT_MISMATCH",
+                timestamp=timestamp,
+            )
+            from sia.authority_gate import AuthorizationDecision as _AD
+
+            mismatch_decision = _AD(
+                allowed=False,
+                operation=decision.operation,
+                reason_code="CAPABILITY_CONTEXT_MISMATCH",
+                reason=(
+                    f"capability_id in request ({request_capability_id!r}) does not match "
+                    f"the decision ({decision.capability_id!r})"
+                ),
+                capability_id=decision.capability_id,
+                policy_hash=decision.policy_hash,
+                audit_required=True,
+                evidence_sequence=decision.evidence_sequence,
+            )
+            return mismatch_decision, None
+
+        # ── Issue authority-bound execution context ───────────────────────────
+        authorization_id = (
+            str(decision.evidence_sequence)
+            if decision.evidence_sequence is not None
+            else None
+        )
+        ctx = _issue_tool_execution_context(
+            request_id=request_id,
+            authorization_id=authorization_id,
+            identity_id=identity_id or "",
+            capability_id=decision.capability_id,
+            tool_name=tool_name,
+            operation=request.operation_name,
+            tool_capability=capability,
+            args=tuple(args),
             input_hash=input_hash,
             requester=requester,
             runtime_version=runtime_version,
+            issued_at=timestamp,
+            workspace_id=None,  # S-002 reserved
+            binding_id=None,    # S-002 reserved
+            branch=None,        # S-002 reserved
+            task_id=None,       # S-002 reserved
         )
+
+        self._recorder.record_tool_operation(
+            actor_id=self._owner_id,
+            event_type="tool.operation.started",
+            request_id=request_id,
+            authorization_id=authorization_id,
+            identity_id=identity_id,
+            capability_id=decision.capability_id,
+            tool_name=tool_name,
+            operation=request.operation_name,
+            decision="authorized",
+            execution_status="started",
+            timestamp=timestamp,
+        )
+
+        try:
+            result = executor.execute_authorized(ctx)
+        except Exception as exc:
+            failure_reason = str(exc) or type(exc).__name__
+            self._recorder.record_tool_operation(
+                actor_id=self._owner_id,
+                event_type="tool.operation.failed",
+                request_id=request_id,
+                authorization_id=authorization_id,
+                identity_id=identity_id,
+                capability_id=decision.capability_id,
+                tool_name=tool_name,
+                operation=request.operation_name,
+                decision="authorized",
+                execution_status="failed",
+                failure_reason=failure_reason,
+                timestamp=datetime.now(timezone.utc).isoformat(),
+            )
+            raise
+
+        self._recorder.record_tool_operation(
+            actor_id=self._owner_id,
+            event_type="tool.operation.completed",
+            request_id=request_id,
+            authorization_id=authorization_id,
+            identity_id=identity_id,
+            capability_id=decision.capability_id,
+            tool_name=tool_name,
+            operation=request.operation_name,
+            decision="authorized",
+            execution_status="completed",
+            timestamp=datetime.now(timezone.utc).isoformat(),
+        )
+        return decision, result
 
     def call_provider_authorized(
         self,

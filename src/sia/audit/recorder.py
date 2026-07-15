@@ -135,3 +135,54 @@ class AuditRecorder:
             dict(payload),
             actor_id=actor_id,
         )
+
+    def record_tool_operation(
+        self,
+        *,
+        actor_id: str,
+        event_type: str,
+        request_id: str | None = None,
+        authorization_id: str | None = None,
+        identity_id: str | None = None,
+        workspace_id: str | None = None,
+        binding_id: str | None = None,
+        branch: str | None = None,
+        task_id: str | None = None,
+        capability_id: str | None = None,
+        tool_name: str | None = None,
+        operation: str | None = None,
+        decision: str | None = None,
+        execution_status: str | None = None,
+        failure_reason: str | None = None,
+        timestamp: str | None = None,
+    ) -> None:
+        """Append canonical sia.audit.recorder tool.operation evidence.
+
+        Emitted at every lifecycle boundary:
+        - ``tool.operation.denied``    — authorization denied before execution
+        - ``tool.operation.rejected``  — execution rejected (e.g. capability mismatch)
+        - ``tool.operation.started``   — authority-issued context handed to executor
+        - ``tool.operation.failed``    — subprocess or validator raised an exception
+        - ``tool.operation.completed`` — subprocess exited (zero or non-zero)
+        """
+        payload: dict[str, Any] = {
+            "request_id": request_id,
+            "authorization_id": authorization_id,
+            "identity_id": identity_id,
+            "workspace_id": workspace_id,
+            "binding_id": binding_id,
+            "branch": branch,
+            "task_id": task_id,
+            "capability_id": capability_id,
+            "tool_name": tool_name,
+            "operation": operation,
+            "decision": decision,
+            "execution_status": execution_status,
+            "failure_reason": failure_reason,
+            "timestamp": timestamp,
+        }
+        self._ledger.append(
+            event_type,
+            {k: v for k, v in payload.items() if v is not None},
+            actor_id=actor_id,
+        )
