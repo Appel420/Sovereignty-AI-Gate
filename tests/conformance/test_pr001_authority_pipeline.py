@@ -7,6 +7,7 @@ import pytest
 from sia import LocalAuthorityProbeProvider, ProtectedOperation, SovereignAuthority
 from sia.authority_gate import AuthorizedContextPacket, IdentityContext, OperationRequest
 from sia.delegation.models import DelegationToken
+from sia.errors.exceptions import MemoryConsentDeniedError
 from sia.memory.models import MemoryRecord
 from sia.tools import PlaygroundExecutor, ToolCapability, ToolRegistry
 from sia.tools.audit import AuditLedger as ToolAuditLedger
@@ -282,7 +283,7 @@ def test_provider_receives_no_vault_or_keys():
     provider = LocalAuthorityProbeProvider()
     record = MemoryRecord(
         record_id="mem-provider",
-        model_id="model:gpt4",
+        model_id=provider.provider_id,
         content={"text": "approved context"},
     )
     authority.store_memory(record)
@@ -314,10 +315,65 @@ def test_provider_receives_no_vault_or_keys():
     assert payload["memory_context"] == [
         {
             "record_id": "mem-provider",
-            "model_id": "model:gpt4",
+            "model_id": provider.provider_id,
             "content": {"text": "approved context"},
         }
     ]
+
+
+def test_provider_context_requires_memory_consent():
+    authority = make_authority(ProtectedOperation.CALL_PROVIDER)
+    provider = LocalAuthorityProbeProvider()
+    record = MemoryRecord(
+        record_id="mem-private",
+        model_id="xai.grok",
+        content={"text": "private context"},
+    )
+    authority.store_memory(record)
+    capability = make_delegation(["provider.call"], grantee_id=provider.provider_id)
+
+    with pytest.raises(MemoryConsentDeniedError):
+        authority.call_provider_authorized(
+            authority.make_operation_request(
+                ProtectedOperation.CALL_PROVIDER,
+                capability=capability,
+                provider_id=provider.provider_id,
+                resource_id=record.record_id,
+            ),
+            provider=provider,
+            record_ids=[record.record_id],
+        )
+
+    assert provider.last_packet is None
+
+
+def test_provider_context_allows_explicitly_consented_memory():
+    authority = make_authority(ProtectedOperation.CALL_PROVIDER)
+    provider = LocalAuthorityProbeProvider()
+    record = MemoryRecord(
+        record_id="mem-shared",
+        model_id="xai.grok",
+        content={"text": "approved context"},
+        consent=[provider.provider_id],
+    )
+    authority.store_memory(record)
+    capability = make_delegation(["provider.call"], grantee_id=provider.provider_id)
+
+    decision, response = authority.call_provider_authorized(
+        authority.make_operation_request(
+            ProtectedOperation.CALL_PROVIDER,
+            capability=capability,
+            provider_id=provider.provider_id,
+            resource_id=record.record_id,
+        ),
+        provider=provider,
+        record_ids=[record.record_id],
+    )
+
+    assert decision.allowed is True
+    assert response is not None
+    assert provider.last_packet is not None
+    assert provider.last_packet.memory_context[0]["record_id"] == record.record_id
 
 
 def test_provider_lifecycle_is_authority_owned_and_sequenced():
