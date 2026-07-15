@@ -11,10 +11,12 @@ from sia.providers.registry import (
     ProviderID,
     lookup_provider,
 )
+from sia.providers.router import ProviderRouter
 
 __all__ = [
     "PROVIDER_REGISTRY",
     "ProviderEntry",
     "ProviderID",
     "lookup_provider",
+    "ProviderRouter",
 ]
