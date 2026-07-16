@@ -11,6 +11,7 @@ This is the main dedicated branch. All changes by Claude Grok/Ara GPT/Codex Copi
 - [Architecture and protocol documentation](#architecture-and-protocol-documentation)
 - [Development workflow](#development-workflow)
 - [Policy and contribution requirements](#provider-and-platform-policy)
+- [FedRAMP Phase 4 hardening (internal evidence phase)](#fedramp-phase-4-hardening-internal-evidence-phase)
 
 ## Provider policy
 
@@ -177,11 +178,22 @@ Read these documents by purpose rather than treating the repository as a single 
 5. Review the relevant architecture and RFC documents when a change affects authority semantics.
 6. Follow the branch and pull-request rules above before sharing work.
 
-## FedRAMP Phase 4 Hardening (Internal)
+## FedRAMP Phase 4 Hardening (Internal Evidence Phase)
 
-This repository's FedRAMP Phase 4 work is an internal FedRAMP Rev. 5 evidence-readiness and cloud/dependency-hardening phase. It is not a FedRAMP authorization or certification claim.
+This branch includes FedRAMP Rev. 5 Phase 4 internal hardening work focused on evidence-readiness and repeatable controls verification:
 
-The phase keeps the core workflow offline-first and records optional cloud integrations, CI dependencies, deployment boundaries, and their evidence sources in:
+- Deterministic and pinned Python and npm dependency baselines.
+- SBOM generation with freshness validation checks.
+- Pinned GitHub Actions usage and read-only workflow permissions defaults.
+- Fail-closed Docker/Nginx and offline deployment defaults.
+- Cloud and dependency inventory evidence artifacts.
+- Continuous monitoring and evidence-check workflows.
+- Internal control-to-evidence mapping and security decision records.
+- Portable `sia.cloud-egress.v1` envelope documentation in `docs/architecture/cloud_egress_protection.md` and `RFC/SIA-EP-0001.md`.
+
+This hardening is for internal FedRAMP Rev. 5 evidence-readiness only and does **not** claim FedRAMP authorization, ATO, or certification.
+
+The phase keeps core workflows offline-first and records optional cloud integrations, CI dependencies, deployment boundaries, and supporting evidence in:
 
 - [`cloud_dependency_inventory.json`](docs/compliance/fedramp_phase4/cloud_dependency_inventory.json) — machine-readable dependency and trust-boundary inventory.
 - [`control_evidence_matrix.md`](docs/compliance/fedramp_phase4/control_evidence_matrix.md) — internal mapping to NIST SP 800-53 control families.
@@ -189,10 +201,14 @@ The phase keeps the core workflow offline-first and records optional cloud integ
 - [`security_decision_record_index.md`](docs/compliance/fedramp_phase4/security_decision_record_index.md) — security decisions and supporting evidence.
 - [`sbom.json`](docs/compliance/fedramp_phase4/sbom.json) — reproducible software bill of materials.
 
-Run the phase-specific checks locally:
+### Verification
+
+Run:
 
 ```bash
 python scripts/check_dependency_policy.py
-python scripts/validate_cloud_config.py
 python scripts/generate_sbom.py --check docs/compliance/fedramp_phase4/sbom.json
+python scripts/validate_cloud_config.py
+pytest
+npm test
 ```
