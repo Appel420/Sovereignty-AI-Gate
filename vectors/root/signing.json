@@ -1,0 +1,17 @@
+{
+  "expected": {
+    "signature_hex": "7725300cd4ae9e5baec224ea5f3fd2c58e4febb1c929008c10a62c893bcb83af2965f47bb795d619eeddb54c74e33e110f3b2931a59cbbd000b39c9d56bc7b0a",
+    "verify_ok": true,
+    "verify_tampered_ok": false,
+    "verify_wrong_root_ok": false
+  },
+  "inputs": {
+    "created_at": 1700000000,
+    "payload_utf8": "SBP test payload",
+    "root_secret_hex": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "tampered_payload_utf8": "SBP tampered payload",
+    "wrong_root_secret_hex": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "suite_id": "SBP-INTEROP-0.2/Ed25519-SHA3-512-AES-256-GCM",
+  "vector_version": "SBP-TEST-VECTORS-0.2"
+}

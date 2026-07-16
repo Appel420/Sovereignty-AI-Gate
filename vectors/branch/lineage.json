@@ -1,0 +1,64 @@
+{
+  "expected": {
+    "child_key_hex": "37e25ab1389d5034f76f47431a51334cd1139d39c04c94361d2335d9ff6ac740",
+    "child_metadata": {
+      "branch_id": "0fe04216bdb52b73aae13717cb127323468df708a446e225bf3adfc7107730e48dfbb26b03f7107acaaa19d44f7713e27d5f05d4c2215c8e4444e33d7b9e9608",
+      "capabilities": [
+        "READ"
+      ],
+      "created_at": 1700000000,
+      "label": "child",
+      "owner_id": "27f98eb637251b20d73d48bffac5f2490ea91cbe4d6ee55f70666e0a67aebf98d34e3746a258ef7460430b9bcaf22275f67c1f92e0e8fbdfb371b197b89a7041",
+      "parent_branch_id": "e65112c926ba382d93d4c84b136485ee7799dfb5184d2a75c57ce86156548e6156c3324aa2139c47d084817da6d25cd2362a8f7c5849d50ce765e8d0b6afb8f4",
+      "policy_hash": "9763ea6caf85ed9e95a3a7af57cd04ad44b2dfacbeaba1be5a191f9fe45a52ccc3a5f40a061a4459321a0eaf6aecc3ffb3756e45bfac3f2a598774e7f73c2db7",
+      "root_id": "27f98eb637251b20d73d48bffac5f2490ea91cbe4d6ee55f70666e0a67aebf98d34e3746a258ef7460430b9bcaf22275f67c1f92e0e8fbdfb371b197b89a7041",
+      "version": 1
+    },
+    "parent_key_hex": "bb1668d263eec589aa078b1da4a4d107873920742afcd5c291cc5c219fddf763",
+    "parent_metadata": {
+      "branch_id": "e65112c926ba382d93d4c84b136485ee7799dfb5184d2a75c57ce86156548e6156c3324aa2139c47d084817da6d25cd2362a8f7c5849d50ce765e8d0b6afb8f4",
+      "capabilities": [
+        "DELEGATE",
+        "READ"
+      ],
+      "created_at": 1700000000,
+      "label": "parent",
+      "owner_id": "27f98eb637251b20d73d48bffac5f2490ea91cbe4d6ee55f70666e0a67aebf98d34e3746a258ef7460430b9bcaf22275f67c1f92e0e8fbdfb371b197b89a7041",
+      "parent_branch_id": null,
+      "policy_hash": "9763ea6caf85ed9e95a3a7af57cd04ad44b2dfacbeaba1be5a191f9fe45a52ccc3a5f40a061a4459321a0eaf6aecc3ffb3756e45bfac3f2a598774e7f73c2db7",
+      "root_id": "27f98eb637251b20d73d48bffac5f2490ea91cbe4d6ee55f70666e0a67aebf98d34e3746a258ef7460430b9bcaf22275f67c1f92e0e8fbdfb371b197b89a7041",
+      "version": 1
+    }
+  },
+  "inputs": {
+    "child": {
+      "capabilities": [
+        "READ"
+      ],
+      "created_at": 1700000000,
+      "label": "child",
+      "policy": {
+        "inherits_root": true,
+        "type": "branch-default",
+        "version": 1
+      }
+    },
+    "parent": {
+      "capabilities": [
+        "DELEGATE",
+        "READ"
+      ],
+      "created_at": 1700000000,
+      "label": "parent",
+      "policy": {
+        "inherits_root": true,
+        "type": "branch-default",
+        "version": 1
+      }
+    },
+    "root_created_at": 1700000000,
+    "root_secret_hex": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "suite_id": "SBP-INTEROP-0.2/Ed25519-SHA3-512-AES-256-GCM",
+  "vector_version": "SBP-TEST-VECTORS-0.2"
+}
