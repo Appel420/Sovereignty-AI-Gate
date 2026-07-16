@@ -176,3 +176,23 @@ Read these documents by purpose rather than treating the repository as a single 
 4. Run `bash scripts/lint_dashboard.sh` when dashboard JavaScript changes.
 5. Review the relevant architecture and RFC documents when a change affects authority semantics.
 6. Follow the branch and pull-request rules above before sharing work.
+
+## FedRAMP Phase 4 Hardening (Internal)
+
+This repository's FedRAMP Phase 4 work is an internal FedRAMP Rev. 5 evidence-readiness and cloud/dependency-hardening phase. It is not a FedRAMP authorization or certification claim.
+
+The phase keeps the core workflow offline-first and records optional cloud integrations, CI dependencies, deployment boundaries, and their evidence sources in:
+
+- [`cloud_dependency_inventory.json`](docs/compliance/fedramp_phase4/cloud_dependency_inventory.json) — machine-readable dependency and trust-boundary inventory.
+- [`control_evidence_matrix.md`](docs/compliance/fedramp_phase4/control_evidence_matrix.md) — internal mapping to NIST SP 800-53 control families.
+- [`continuous_monitoring.md`](docs/compliance/fedramp_phase4/continuous_monitoring.md) — repeatable evidence checks and exception requirements.
+- [`security_decision_record_index.md`](docs/compliance/fedramp_phase4/security_decision_record_index.md) — security decisions and supporting evidence.
+- [`sbom.json`](docs/compliance/fedramp_phase4/sbom.json) — reproducible software bill of materials.
+
+Run the phase-specific checks locally:
+
+```bash
+python scripts/check_dependency_policy.py
+python scripts/validate_cloud_config.py
+python scripts/generate_sbom.py --check docs/compliance/fedramp_phase4/sbom.json
+```
