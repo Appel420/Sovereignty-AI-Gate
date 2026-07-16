@@ -1,57 +1,49 @@
 """
 Imports: validator.
 
-Validates ImportBundle objects per RFC-0019 before they are loaded
-into the local authority state.
+Validate canonical RFC-0019 import payloads.
 """
 from __future__ import annotations
 
 from sia.errors import codes
 from sia.errors.exceptions import ImportError as SIAImportError
-from sia.imports.models import ImportBundle, SUPPORTED_VERSIONS
-from sia.utils.hashing import sha256_object
-
-REQUIRED_FIELDS = {
-    "bundle_id", "created_by", "payload", "payload_hash",
-    "signature", "schema_version", "created_at",
-}
+from sia.imports.models import SUPPORTED_VERSIONS
+from sia.utils.hashing import hash_object
 
 
-def validate_import(bundle: ImportBundle) -> None:
-    """
-    Validate an ImportBundle's structure and payload hash integrity.
+REQUIRED_FIELDS = {"ledger_version", "ledger_hash", "records"}
 
-    Does NOT verify the cryptographic signature; that step requires
-    the signer's public key and is handled by the loader.
 
-    Raises:
-        SIAImportError: if any validation check fails.
-    """
-    d = bundle.to_dict()
+def validate_import(bundle) -> None:
+    """Validate an ImportBundle: version check and hash integrity."""
+    if bundle.schema_version not in SUPPORTED_VERSIONS:
+        raise SIAImportError(
+            code=codes.E_IMPORT_VERSION_UNSUPPORTED,
+            message=f"unsupported import schema version: {bundle.schema_version!r}",
+        )
+    expected = hash_object(bundle.payload)
+    if bundle.payload_hash != expected:
+        raise SIAImportError(
+            code=codes.E_IMPORT_SCHEMA_INVALID,
+            message="import payload hash mismatch",
+        )
 
-    missing = REQUIRED_FIELDS - d.keys()
+
+def validate_import_payload(payload: dict) -> None:
+    missing = REQUIRED_FIELDS - payload.keys()
     if missing:
         raise SIAImportError(
-            codes.E_IMPORT_SCHEMA_INVALID,
-            f"Missing required import fields: {missing}",
+            code=codes.E_IMPORT_SCHEMA_INVALID,
+            message="required import fields missing",
         )
-
-    if d["schema_version"] not in SUPPORTED_VERSIONS:
+    if not isinstance(payload["records"], list):
         raise SIAImportError(
-            codes.E_IMPORT_VERSION_UNSUPPORTED,
-            f"Unsupported import schema version '{d['schema_version']}'.",
+            code=codes.E_IMPORT_SCHEMA_INVALID,
+            message="records must be ordered list",
         )
-
-    for field_name in ("bundle_id", "created_by", "payload_hash", "signature"):
-        if not isinstance(d[field_name], str) or not d[field_name]:
+    for record in payload["records"]:
+        if not isinstance(record, dict):
             raise SIAImportError(
-                codes.E_IMPORT_SCHEMA_INVALID,
-                f"'{field_name}' must be a non-empty string.",
+                code=codes.E_IMPORT_SCHEMA_INVALID,
+                message="record must be object",
             )
-
-    expected_hash = sha256_object(d["payload"])
-    if d["payload_hash"] != expected_hash:
-        raise SIAImportError(
-            codes.E_IMPORT_SCHEMA_INVALID,
-            f"payload_hash mismatch: expected {expected_hash}.",
-        )

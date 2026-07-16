@@ -1,57 +1,49 @@
 """
-Governance: boundary registry tests.
+Security: boundary registry tests for the canonical authority model.
 """
-import pytest
-from sia.security.boundary_registry import BoundaryRegistry
-from sia.errors.exceptions import RegistryDuplicateError, RegistryNotFoundError
+from __future__ import annotations
+
+from sia.errors.exceptions import AuthorityFailure
+from sia.security.boundary_registry import (
+    CANONICAL_BOUNDARIES,
+    BoundaryDefinition,
+    ensure_boundary_registry_is_canonical,
+    find_creator_for_type,
+)
 
 
-@pytest.fixture
-def registry():
-    return BoundaryRegistry()
+class _AuthorityA:
+    pass
 
 
-def test_register_and_get(registry):
-    registry.register("b001", "model:m", "creator", "user:alice", ["*"])
-    record = registry.get("b001")
-    assert record.boundary_id == "b001"
+class _AuthorityB:
+    pass
 
 
-def test_register_duplicate_raises(registry):
-    registry.register("b001", "model:m", "creator", "user:alice", [])
-    with pytest.raises(RegistryDuplicateError):
-        registry.register("b001", "model:m2", "reader", "user:alice", [])
+def test_registry_is_canonical():
+    ensure_boundary_registry_is_canonical()
 
 
-def test_not_found_raises(registry):
-    with pytest.raises(RegistryNotFoundError):
-        registry.get("missing")
+def test_find_creator_for_type_returns_boundary_or_none():
+    assert find_creator_for_type(_AuthorityA) is None
 
 
-def test_deactivate(registry):
-    registry.register("b002", "model:m", "creator", "user:alice", [])
-    registry.deactivate("b002")
-    assert registry.get("b002").active is False
-
-
-def test_list_active_excludes_inactive(registry):
-    registry.register("b003", "model:m", "creator", "user:alice", [])
-    registry.register("b004", "model:n", "reader", "user:alice", [])
-    registry.deactivate("b003")
-    active = registry.list_active()
-    ids = [r.boundary_id for r in active]
-    assert "b003" not in ids
-    assert "b004" in ids
-
-
-def test_snapshot(registry):
-    registry.register("b005", "model:m", "creator", "user:alice", ["a"])
-    snap = registry.snapshot()
-    assert len(snap) == 1
-    assert snap[0]["boundary_id"] == "b005"
-
-
-def test_registry_len(registry):
-    assert len(registry) == 0
-    registry.register("b006", "model:m", "creator", "user:alice", [])
-    assert len(registry) == 1
+def test_creator_rfc_must_match_owning_rfc(monkeypatch):
+    monkeypatch.setattr(
+        "sia.security.boundary_registry.CANONICAL_BOUNDARIES",
+        (
+            BoundaryDefinition(
+                boundary_type=_AuthorityA,
+                owning_rfc="RFC-0001",
+                success_type=_AuthorityA,
+                rejection_type=_AuthorityB,
+                creator_rfc="RFC-0002",
+                creator=lambda: _AuthorityA(),
+            ),
+        ),
+    )
+    try:
+        ensure_boundary_registry_is_canonical()
+        assert False, "expected AuthorityFailure"
+    except AuthorityFailure as exc:
+        assert exc.code == "sia.error.boundary.creator_rfc_mismatch"

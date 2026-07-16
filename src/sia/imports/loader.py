@@ -1,55 +1,54 @@
 """
 Imports: loader.
 
-Loads a validated ImportBundle into the local authority state.
-Duplicate bundles (same bundle_id) are rejected.
+RFC-0019 canonical import loader.
 """
 from __future__ import annotations
 
+import json
+from typing import Any
+
 from sia.errors import codes
 from sia.errors.exceptions import ImportError as SIAImportError
-from sia.imports.models import ImportBundle
-from sia.imports.validator import validate_import
+from sia.export.models import ExportBundle
+from sia.export.validator import validate_bundle
+from sia.imports.models import ImportBundle, ImportedLedger
+from sia.imports.validator import validate_import_payload
 
 
 class BundleLoader:
-    """
-    Manages the set of imported authority bundles.
-
-    Before loading, each bundle is validated by :func:`validate_import`.
-    Duplicate bundle IDs are rejected with E_IMPORT_DUPLICATE.
-    """
+    """Stateful loader that tracks imported bundles and rejects duplicates."""
 
     def __init__(self) -> None:
-        self._loaded: dict[str, ImportBundle] = {}
+        self._seen: dict[str, ImportBundle] = {}
 
     def load(self, bundle: ImportBundle) -> None:
-        """
-        Validate and load *bundle* into the local registry.
-
-        Raises:
-            SIAImportError: on validation failure or duplicate.
-        """
-        validate_import(bundle)
-        if bundle.bundle_id in self._loaded:
+        """Load *bundle*, raising SIAImportError on duplicate bundle_id."""
+        if bundle.bundle_id in self._seen:
             raise SIAImportError(
-                codes.E_IMPORT_DUPLICATE,
-                f"Bundle '{bundle.bundle_id}' has already been imported.",
+                code=codes.E_IMPORT_DUPLICATE,
+                message=f"bundle already imported: {bundle.bundle_id!r}",
             )
-        self._loaded[bundle.bundle_id] = bundle
-
-    def get(self, bundle_id: str) -> ImportBundle:
-        """Return the loaded bundle with *bundle_id*."""
-        try:
-            return self._loaded[bundle_id]
-        except KeyError:
-            raise SIAImportError(
-                codes.E_IMPORT_LOAD_FAILED,
-                f"Bundle '{bundle_id}' is not loaded.",
-            )
+        self._seen[bundle.bundle_id] = bundle
 
     def list_bundles(self) -> list[ImportBundle]:
-        return list(self._loaded.values())
+        """Return all loaded bundles in insertion order."""
+        return list(self._seen.values())
 
-    def __len__(self) -> int:
-        return len(self._loaded)
+
+def import_ledger(envelope) -> ImportedLedger:
+    if not isinstance(envelope, ExportBundle):
+        raise SIAImportError(
+            code=codes.E_IMPORT_LOAD_FAILED,
+            message="canonical ExportBundle required",
+        )
+
+    validate_bundle(envelope)
+    decoded = json.loads(json.dumps(envelope.payload))
+    validate_import_payload(decoded)
+
+    return ImportedLedger(
+        ledger_version=decoded["ledger_version"],
+        ledger_hash=decoded["ledger_hash"],
+        records=tuple(decoded["records"]),
+    )

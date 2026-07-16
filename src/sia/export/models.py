@@ -23,7 +23,7 @@ class ExportBundle:
     ``created_by``      — identity of the exporting operator.
     ``created_at``      — ISO-8601 UTC timestamp.
     ``payload``         — the exported data (authority records, etc.).
-    ``payload_hash``    — SHA-256 hex of the canonical payload.
+    ``payload_hash``    — SHA3-512 hex of the canonical payload.
     ``signature``       — hex-encoded ECDSA/Ed25519 signature over payload_hash.
     ``schema_version``  — wire format version.
     """

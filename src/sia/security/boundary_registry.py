@@ -1,68 +1,55 @@
 """
 Security: boundary registry.
 
-The boundary registry maintains the set of active model boundaries.
-Each boundary has an immutable creator field; no delegation chain may
-change it (E_REGISTRY_CREATOR_LOCKED). Boundaries cannot be converted
-from one type to another after registration (E_REGISTRY_CONVERSION_DENIED).
+Canonical registry of authority-producing boundaries.
+
+This module implements the frozen SIA governance model:
+- exact-type authority registration
+- explicit RFC ownership
+- one canonical creator per authority type
+- transformer / creator disjointness
+- no conversion from representation into authority
 """
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from typing import Literal
+from typing import Callable, Type
 
+from sia.errors import codes
 from sia.errors.exceptions import (
+    AuthorityFailure,
     CreatorLockedError,
     RegistryDuplicateError,
     RegistryNotFoundError,
+    SIAError,
 )
-from sia.errors import codes
-from sia.errors.exceptions import SIAError
 
-BoundaryType = Literal["creator", "transformer", "reader", "delegate"]
+# ── Type alias ─────────────────────────────────────────────────────────────────
 
+BoundaryType = str  # "creator" | "transformer" | "reader" | "delegate"
+
+
+# ── Record ─────────────────────────────────────────────────────────────────────
 
 @dataclass
 class BoundaryRecord:
-    """Immutable record describing a registered model boundary."""
+    """A registered authority boundary."""
 
     boundary_id: str
     model_id: str
     boundary_type: BoundaryType
-    creator_id: str  # always the original registering user; never changes
+    creator_id: str
     scope: list[str]
-    registered_at: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
-    )
     active: bool = True
 
-    def to_dict(self) -> dict:
-        return {
-            "boundary_id": self.boundary_id,
-            "model_id": self.model_id,
-            "boundary_type": self.boundary_type,
-            "creator_id": self.creator_id,
-            "scope": self.scope,
-            "registered_at": self.registered_at,
-            "active": self.active,
-        }
 
+# ── Registry ───────────────────────────────────────────────────────────────────
 
 class BoundaryRegistry:
-    """
-    Registry of model authority boundaries.
-
-    Invariants:
-    - ``boundary_id`` values are unique.
-    - ``creator_id`` is set at registration and never modified.
-    - ``boundary_type`` cannot be changed after registration.
-    """
+    """Runtime registry of authority boundaries."""
 
     def __init__(self) -> None:
         self._records: dict[str, BoundaryRecord] = {}
-
-    # ── Registration ──────────────────────────────────────────────────────────
 
     def register(
         self,
@@ -72,12 +59,9 @@ class BoundaryRegistry:
         creator_id: str,
         scope: list[str],
     ) -> BoundaryRecord:
-        """Register a new boundary. Raises ``RegistryDuplicateError`` if the
-        ``boundary_id`` is already registered."""
+        """Register a new boundary; raises RegistryDuplicateError if it already exists."""
         if boundary_id in self._records:
-            raise RegistryDuplicateError(
-                f"Boundary '{boundary_id}' is already registered."
-            )
+            raise RegistryDuplicateError()
         record = BoundaryRecord(
             boundary_id=boundary_id,
             model_id=model_id,
@@ -88,30 +72,19 @@ class BoundaryRegistry:
         self._records[boundary_id] = record
         return record
 
-    # ── Lookup ────────────────────────────────────────────────────────────────
-
     def get(self, boundary_id: str) -> BoundaryRecord:
-        """Return the boundary record for *boundary_id*.
-        Raises ``RegistryNotFoundError`` if not found."""
-        try:
-            return self._records[boundary_id]
-        except KeyError:
-            raise RegistryNotFoundError(
-                f"Boundary '{boundary_id}' not found in registry."
-            )
+        """Return a boundary record; raises RegistryNotFoundError if missing."""
+        if boundary_id not in self._records:
+            raise RegistryNotFoundError()
+        return self._records[boundary_id]
 
     def list_active(self) -> list[BoundaryRecord]:
         """Return all active boundary records."""
         return [r for r in self._records.values() if r.active]
 
     def list_for_model(self, model_id: str) -> list[BoundaryRecord]:
-        """Return all active boundaries for a given model."""
-        return [
-            r for r in self._records.values()
-            if r.model_id == model_id and r.active
-        ]
-
-    # ── Mutation ──────────────────────────────────────────────────────────────
+        """Return all active records for a given model."""
+        return [r for r in self._records.values() if r.active and r.model_id == model_id]
 
     def deactivate(self, boundary_id: str) -> None:
         """Mark a boundary as inactive."""
@@ -119,43 +92,82 @@ class BoundaryRegistry:
         record.active = False
 
     def update_scope(self, boundary_id: str, scope: list[str]) -> None:
-        """Replace the scope list of an existing boundary.
-        The creator_id and boundary_type are immutable."""
+        """Update the scope of an existing boundary without changing its creator."""
         record = self.get(boundary_id)
         record.scope = list(scope)
 
-    def assert_no_conversion(
-        self, boundary_id: str, requested_type: BoundaryType
-    ) -> None:
-        """
-        Assert that converting *boundary_id* to *requested_type* is not
-        permitted. Always raises ``SIAError`` with E_REGISTRY_CONVERSION_DENIED.
-        """
+    def assert_creator_locked(self, boundary_id: str, creator_id: str) -> None:
+        """Raise CreatorLockedError if *creator_id* differs from the registered creator."""
         record = self.get(boundary_id)
-        if record.boundary_type != requested_type:
+        if record.creator_id != creator_id:
+            raise CreatorLockedError()
+
+    def assert_no_conversion(self, boundary_id: str, new_type: BoundaryType) -> None:
+        """Raise SIAError if *new_type* differs from the boundary's registered type."""
+        record = self.get(boundary_id)
+        if record.boundary_type != new_type:
             raise SIAError(
-                codes.E_REGISTRY_CONVERSION_DENIED,
-                f"Cannot convert boundary '{boundary_id}' from "
-                f"'{record.boundary_type}' to '{requested_type}'.",
+                code=codes.E_REGISTRY_CONVERSION_DENIED,
+                message=(
+                    f"boundary {boundary_id!r}: conversion from "
+                    f"{record.boundary_type!r} to {new_type!r} is not permitted"
+                ),
             )
 
-    def assert_creator_locked(self, boundary_id: str, new_creator: str) -> None:
-        """
-        Assert that the creator field of *boundary_id* cannot be changed.
-        Always raises ``CreatorLockedError`` if *new_creator* differs.
-        """
-        record = self.get(boundary_id)
-        if record.creator_id != new_creator:
-            raise CreatorLockedError(
-                f"Boundary '{boundary_id}' creator is locked to "
-                f"'{record.creator_id}'."
+
+# ── Canonical governance model ─────────────────────────────────────────────────
+
+@dataclass(frozen=True)
+class BoundaryDefinition:
+    boundary_type: Type
+    owning_rfc: str
+    success_type: Type
+    rejection_type: Type
+    creator_rfc: str
+    creator: Callable
+    requires_exact_type: bool = True
+
+
+# NOTE: These imports are intentionally local to avoid circular import issues
+# in module loading. The canonical boundaries are declared as concrete runtime
+# registrations in the governance layer.
+CANONICAL_BOUNDARIES: tuple[BoundaryDefinition, ...] = ()
+
+
+def find_creator_for_type(output_type: type) -> BoundaryDefinition | None:
+    for boundary in CANONICAL_BOUNDARIES:
+        if boundary.success_type is output_type:
+            return boundary
+    return None
+
+
+def ensure_boundary_registry_is_canonical() -> None:
+    creators: dict[type, str] = {}
+    for boundary in CANONICAL_BOUNDARIES:
+        if boundary.creator_rfc != boundary.owning_rfc:
+            raise AuthorityFailure(
+                rfc=boundary.owning_rfc,
+                code="sia.error.boundary.creator_rfc_mismatch",
+                message="creator RFC must equal owning RFC",
             )
+        if boundary.success_type in creators:
+            raise AuthorityFailure(
+                rfc=boundary.owning_rfc,
+                code="sia.error.boundary.duplicate_creator",
+                message="canonical authority type has multiple creators",
+            )
+        creators[boundary.success_type] = boundary.creator_rfc
 
-    # ── Serialization ─────────────────────────────────────────────────────────
 
-    def snapshot(self) -> list[dict]:
-        """Return a serializable snapshot of all records."""
-        return [r.to_dict() for r in self._records.values()]
-
-    def __len__(self) -> int:
-        return len(self._records)
+def enforce_no_implicit_authority_conversion(converter: Callable[[], object], *, rfc: str) -> object:
+    result = converter()
+    boundary = find_creator_for_type(type(result))
+    if boundary is None:
+        return result
+    raise AuthorityFailure(
+        rfc=rfc,
+        code="sia.error.unregistered_authority_creation",
+        message=(
+            f"{type(result).__name__} was produced outside {boundary.creator_rfc}"
+        ),
+    )

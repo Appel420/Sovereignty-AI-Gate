@@ -5,10 +5,11 @@ services:
     build:
       context: ../..
       dockerfile: deploy/docker/Dockerfile
-    image: sovereignty-ai-gate:latest
+    image: sovereignty-ai-gate:0.1.0
     container_name: sia_dashboard
+    user: "1001:1001"
     ports:
-      - "8080:8080"
+      - "9898:9898"
     restart: unless-stopped
     read_only: true
     tmpfs:
@@ -17,9 +18,16 @@ services:
       - no-new-privileges:true
     environment:
       - SIA_OFFLINE=1
+      - SIA_ALLOW_CLOUD=0
     volumes:
       - sia_state:/app/state
+    networks:
+      - sia_internal
 
 volumes:
   sia_state:
     driver: local
+
+networks:
+  sia_internal:
+    internal: true

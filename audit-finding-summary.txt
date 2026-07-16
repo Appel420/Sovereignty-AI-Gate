@@ -1,0 +1,38 @@
+S-001C — MCP Authority Enforcement
+
+Verdict: FAIL — Based on the supplied implementation, authority integration is not demonstrated.
+
+Audit criterion: Privileged MCP operations are expected to participate in the same authority and evidence pipeline used by other governed execution paths.
+
+Scope: This finding is based solely on the reviewed `mcp_server.py` implementation and accompanying tests. It is not a repository-wide certification or a conclusion about files, branches, or implementations that were not inspected.
+
+Evidence
+
+- Confirmed: Offline-by-default behavior, workspace confinement, path-traversal defense, bounded reads, no shell execution, and no visible network or credential handling.
+- Confirmed: No visible integration with `AuthorityGate`, `OperationRequest`, `RequestContext`, `AuthorizationDecision`, or SIA audit recording in the supplied implementation.
+- Not demonstrated: Identity enforcement, capability validation, policy evaluation, and centralized governance evidence.
+- Unverified: Repository-wide hidden/sensitive-file protections and the existence of `workspace_analyze` or `workspace_repo_status`, because the supplied implementation and tests are inconsistent.
+
+Recommendation
+
+One architecture consistent with the repository’s documented governance model is to route MCP requests through the same authority and evidence pipeline used by other privileged operations while preserving the existing filesystem safeguards:
+
+```text
+JSON-RPC
+    ↓
+MCP Adapter
+    ↓
+OperationRequest
+    ↓
+AuthorityGate
+    ↓
+AuthorizationDecision
+    ↓
+WorkspaceToolExecutor
+    ↓
+AuditRecorder
+    ↓
+Response
+```
+
+This remains implementation-neutral. It defines the required security property—privileged MCP operations must participate in the unified authority and evidence pipeline—without prescribing one implementation strategy.
