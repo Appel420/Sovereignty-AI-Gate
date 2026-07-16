@@ -120,6 +120,13 @@ def test_envelope_nonce_is_unique_per_seal():
     assert env1.nonce_hex != env2.nonce_hex, "Each seal must use a fresh nonce"
 
 
+def test_seal_rejects_non_bytes_nonce():
+    branch = make_branch()
+    manifest = ObjectManifest.create(branch=branch, content_hash=CONTENT_HASH, created_at=FIXED_TS)
+    with pytest.raises(TypeError, match="nonce must be bytes"):
+        seal_manifest(manifest, branch, nonce="not-bytes")
+
+
 def test_unseal_fails_with_wrong_branch():
     root = make_root()
     branch_a = Branch(root, label="branch-a", capabilities=[BranchCapability.ISSUE_OBJECT], created_at=FIXED_TS)

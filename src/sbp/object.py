@@ -199,7 +199,11 @@ def seal_manifest(
     key = branch.derive_key(length=32)
     if nonce is None:
         nonce = os.urandom(12)
-    elif len(nonce) != 12:
+    elif not isinstance(nonce, bytes):
+        raise TypeError("seal_manifest nonce must be bytes")
+    else:
+        nonce = bytes(nonce)
+    if len(nonce) != 12:
         raise ValueError("seal_manifest nonce must be exactly 12 bytes")
     plaintext = canonical_bytes(manifest.to_dict())
     aesgcm = AESGCM(key)

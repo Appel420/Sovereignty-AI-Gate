@@ -162,6 +162,8 @@ class AuditChain:
         """
         if not action:
             raise ValueError("AuditChain.append requires a non-empty action")
+        if entry_id is not None and not isinstance(entry_id, str):
+            raise TypeError("AuditChain.append entry_id must be a string")
 
         sequence = len(self._entries)
         previous_hash = (
@@ -176,7 +178,7 @@ class AuditChain:
 
         signing_doc: dict[str, Any] = {
             "sequence": sequence,
-            "entry_id": entry_id or str(uuid4()),
+            "entry_id": entry_id if entry_id is not None else str(uuid4()),
             "timestamp": ts,
             "branch_id": self._branch_id,
             "actor_id": actor_id,
