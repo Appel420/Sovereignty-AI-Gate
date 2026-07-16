@@ -193,6 +193,14 @@ This branch includes FedRAMP Rev. 5 Phase 4 internal hardening work focused on e
 
 This hardening is for internal FedRAMP Rev. 5 evidence-readiness only and does **not** claim FedRAMP authorization, ATO, or certification.
 
+The phase keeps core workflows offline-first and records optional cloud integrations, CI dependencies, deployment boundaries, and supporting evidence in:
+
+- [`cloud_dependency_inventory.json`](docs/compliance/fedramp_phase4/cloud_dependency_inventory.json) — machine-readable dependency and trust-boundary inventory.
+- [`control_evidence_matrix.md`](docs/compliance/fedramp_phase4/control_evidence_matrix.md) — internal mapping to NIST SP 800-53 control families.
+- [`continuous_monitoring.md`](docs/compliance/fedramp_phase4/continuous_monitoring.md) — repeatable evidence checks and exception requirements.
+- [`security_decision_record_index.md`](docs/compliance/fedramp_phase4/security_decision_record_index.md) — security decisions and supporting evidence.
+- [`sbom.json`](docs/compliance/fedramp_phase4/sbom.json) — reproducible software bill of materials.
+
 ### Verification
 
 Run:
