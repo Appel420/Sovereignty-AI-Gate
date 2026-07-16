@@ -31,4 +31,7 @@ docker compose up -d
 - Run as non-root user (UID 1001)
 - Read-only root filesystem
 - No privileged containers
+- Internal-only Docker network (`internal: true`) to fail closed on unmanaged egress
+- Pinned local image tag (`sovereignty-ai-gate:0.1.0`), never `:latest`
+- Explicit offline defaults (`SIA_OFFLINE=1`, `SIA_ALLOW_CLOUD=0`)
 - No external network calls from core services

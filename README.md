@@ -101,6 +101,7 @@ The repository is organized so that the authority protocol, core primitives, das
 | `src/dashboard/` | The local deterministic dashboard, including its interface, styles, model view, and deterministic compliance, signature, TPM, and threat-feed modules. |
 | `tests/` | Python governance, conformance, core, runtime, and smoke tests, plus dashboard determinism tests and reusable protocol fixtures. |
 | `docs/architecture/` | Focused explanations of the authority lifecycle, boundary rules, deployment model, registry governance, and deterministic dashboard behavior. |
+| `docs/compliance/fedramp_phase4/` | Internal FedRAMP Rev. 5 hardening evidence: cloud/dependency inventory, SBOM, control matrix, monitoring model, and security decision index. |
 | `docs/rfc/` and `RFC/` | Protocol specifications and implementation-planning records that define authority semantics and compatibility expectations. |
 | `docs/conformance/` | The conformance test matrix and documented failure codes used to evaluate protocol behavior. |
 | `scripts/` | Local development helpers for bootstrapping dependencies, running tests and conformance checks, linting the dashboard, and building releases. |
