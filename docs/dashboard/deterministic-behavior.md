@@ -14,14 +14,19 @@ Any occurrence fails the `dashboard-lint.yml` workflow.
 | Nonce generation | `crypto.getRandomValues()` |
 | Key generation | `crypto.subtle.generateKey()` |
 | Signing | `crypto.subtle.sign()` |
-| Hashing | `crypto.subtle.digest()` |
+| Hashing | `crypto.subtle.digest("SHA-512", ...)` |
 
 ## State Hashing
 
-The dashboard footer displays a truncated SHA-256 of the current state object.
+The dashboard footer displays a truncated SHA-512 of the current state object.
 This hash changes deterministically with state mutations.
 
-## TPM PCR Simulation
+## Software Measurements
 
-`tpm.js` simulates TPM PCR measurement by hashing input bytes with SHA-256.
-When a hardware TPM is available, it can be substituted without changing the interface.
+> **[SOFTWARE MEASUREMENT]** `tpm.js` produces measurements in
+> software using `crypto.subtle.digest("SHA-512", ...)`. This is **not** hardware TPM
+> attestation. It does not bind measurements to a hardware root of trust and must not
+> be represented as such.
+
+`tpm.js` provides a deterministic, testable measurement interface. All values it
+produces are software-computed and carry no hardware-attestation guarantee.

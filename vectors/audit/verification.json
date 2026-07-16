@@ -1,0 +1,68 @@
+{
+  "expected": {
+    "verify_ok": true,
+    "verify_tampered_action_ok": false,
+    "verify_tampered_link_ok": false
+  },
+  "inputs": {
+    "branch_id": "branch-audit-test",
+    "entries": [
+      {
+        "action": "OBJECT_ISSUED",
+        "actor_id": "actor",
+        "branch_id": "branch-audit-test",
+        "entry_hash": "b3f5c535f72af6a19cded3057eb0c7113e2b1602be61a14040a3ad64f0e7ccf06ed12d46699d7aec96574dc9f7ef2f8b7a42ff14a927e695eaf3bfd9117b8609",
+        "entry_id": "00000000-0000-4000-8000-000000000001",
+        "metadata_hash": "ca08781452d0663e94116575d2d4976d8f37569c679af6a48e5cc0c9f89f469ba449657b4e79cdb9f441e89c136bab8fda5b0a05310697db2f14e7ea6764fc0a",
+        "object_id": "779494ece233a32b49eab13beeddcc023aa17a661dabd93034dea796ca420ef7327432382606e4546cd38d5d01615d9f825853f4db99382fd3c948a13fd4ab8a",
+        "previous_hash": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "sequence": 0,
+        "signature": "718e1063e1cb1c8d2eea4920143b6241bcaa240cda657d2eab08a71fb1bbf8cfccff46e1be485d6ed7a67931c62744bf55d755fc35e55e45f4ec2387e2d49904",
+        "timestamp": "2023-11-14T22:13:20Z"
+      },
+      {
+        "action": "OBJECT_VERIFIED",
+        "actor_id": "actor",
+        "branch_id": "branch-audit-test",
+        "entry_hash": "9264ddaba36c748037ae369ddf95a12520bea7a241a49d4d59311e96fd1c329775d8bf223b63899f40d372fd848108943d0556166f8b248a08a8a0dba4e32c19",
+        "entry_id": "00000000-0000-4000-8000-000000000002",
+        "metadata_hash": "ae3253b3c6462cec354dabc1ffef482db329d4c033293a91c6fed90c17257387dccb52b937fbcbadac9ebe185a12074aee12c6e4b45c59a16580049e3abd6d6f",
+        "object_id": "779494ece233a32b49eab13beeddcc023aa17a661dabd93034dea796ca420ef7327432382606e4546cd38d5d01615d9f825853f4db99382fd3c948a13fd4ab8a",
+        "previous_hash": "b3f5c535f72af6a19cded3057eb0c7113e2b1602be61a14040a3ad64f0e7ccf06ed12d46699d7aec96574dc9f7ef2f8b7a42ff14a927e695eaf3bfd9117b8609",
+        "sequence": 1,
+        "signature": "2f1272a6d16e73c37228ef9380cb386fe7e27e91bb9cc0792fb1ac499e5cc7a12e8c0101a7ce1f45e3b3b6159bb9b3dce6b804da01c04f65d7a0cb8b6658a901",
+        "timestamp": "2023-11-14T22:13:21Z"
+      }
+    ],
+    "root_created_at": 1700000002,
+    "root_secret_hex": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "tampered_action_entry": {
+      "action": "TAMPERED_ACTION",
+      "actor_id": "actor",
+      "branch_id": "branch-audit-test",
+      "entry_hash": "b3f5c535f72af6a19cded3057eb0c7113e2b1602be61a14040a3ad64f0e7ccf06ed12d46699d7aec96574dc9f7ef2f8b7a42ff14a927e695eaf3bfd9117b8609",
+      "entry_id": "00000000-0000-4000-8000-000000000001",
+      "metadata_hash": "ca08781452d0663e94116575d2d4976d8f37569c679af6a48e5cc0c9f89f469ba449657b4e79cdb9f441e89c136bab8fda5b0a05310697db2f14e7ea6764fc0a",
+      "object_id": "779494ece233a32b49eab13beeddcc023aa17a661dabd93034dea796ca420ef7327432382606e4546cd38d5d01615d9f825853f4db99382fd3c948a13fd4ab8a",
+      "previous_hash": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "sequence": 0,
+      "signature": "718e1063e1cb1c8d2eea4920143b6241bcaa240cda657d2eab08a71fb1bbf8cfccff46e1be485d6ed7a67931c62744bf55d755fc35e55e45f4ec2387e2d49904",
+      "timestamp": "2023-11-14T22:13:20Z"
+    },
+    "tampered_link_entry": {
+      "action": "OBJECT_VERIFIED",
+      "actor_id": "actor",
+      "branch_id": "branch-audit-test",
+      "entry_hash": "9264ddaba36c748037ae369ddf95a12520bea7a241a49d4d59311e96fd1c329775d8bf223b63899f40d372fd848108943d0556166f8b248a08a8a0dba4e32c19",
+      "entry_id": "00000000-0000-4000-8000-000000000002",
+      "metadata_hash": "ae3253b3c6462cec354dabc1ffef482db329d4c033293a91c6fed90c17257387dccb52b937fbcbadac9ebe185a12074aee12c6e4b45c59a16580049e3abd6d6f",
+      "object_id": "779494ece233a32b49eab13beeddcc023aa17a661dabd93034dea796ca420ef7327432382606e4546cd38d5d01615d9f825853f4db99382fd3c948a13fd4ab8a",
+      "previous_hash": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "sequence": 1,
+      "signature": "2f1272a6d16e73c37228ef9380cb386fe7e27e91bb9cc0792fb1ac499e5cc7a12e8c0101a7ce1f45e3b3b6159bb9b3dce6b804da01c04f65d7a0cb8b6658a901",
+      "timestamp": "2023-11-14T22:13:21Z"
+    }
+  },
+  "suite_id": "SBP-INTEROP-0.2/Ed25519-SHA3-512-AES-256-GCM",
+  "vector_version": "SBP-TEST-VECTORS-0.2"
+}

@@ -1,0 +1,28 @@
+{
+  "expected": {
+    "custom_policy_hash": "184dd214cb331c3d61b2f56c1235042e71dcdd59b7ce85627942c09ecb2376fa4e58a78cc14784d73ea8e993da06e8edf063d1e36a81eba3249c1d76cd18de4b",
+    "default_policy_hash": "701333762c2f9df13200b2a64f864c43421f3e0f129c36b1e0ab3279570141ee645846eceddb4e39e1270c2daa1c99a4c823fc2470eea9fb140ff8bb8f35b08b",
+    "hashes_differ": true
+  },
+  "inputs": {
+    "created_at": 1700000000,
+    "custom_policy": {
+      "authority": "local-device",
+      "backups_are_replicas": true,
+      "delegation_required": true,
+      "local_state_is_authoritative": true,
+      "type": "multi-owner",
+      "version": 1
+    },
+    "default_policy": {
+      "authority": "local-device",
+      "backups_are_replicas": true,
+      "local_state_is_authoritative": true,
+      "type": "single-owner",
+      "version": 1
+    },
+    "root_secret_hex": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "suite_id": "SBP-INTEROP-0.2/Ed25519-SHA3-512-AES-256-GCM",
+  "vector_version": "SBP-TEST-VECTORS-0.2"
+}

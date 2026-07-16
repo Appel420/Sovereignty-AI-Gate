@@ -12,12 +12,110 @@ This module implements the frozen SIA governance model:
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Callable, Type
 
 from sia.errors import codes
-from sia.errors.exceptions import AuthorityFailure, SIAError
+from sia.errors.exceptions import (
+    AuthorityFailure,
+    CreatorLockedError,
+    RegistryDuplicateError,
+    RegistryNotFoundError,
+    SIAError,
+)
 
+# ── Type alias ─────────────────────────────────────────────────────────────────
+
+BoundaryType = str  # "creator" | "transformer" | "reader" | "delegate"
+
+
+# ── Record ─────────────────────────────────────────────────────────────────────
+
+@dataclass
+class BoundaryRecord:
+    """A registered authority boundary."""
+
+    boundary_id: str
+    model_id: str
+    boundary_type: BoundaryType
+    creator_id: str
+    scope: list[str]
+    active: bool = True
+
+
+# ── Registry ───────────────────────────────────────────────────────────────────
+
+class BoundaryRegistry:
+    """Runtime registry of authority boundaries."""
+
+    def __init__(self) -> None:
+        self._records: dict[str, BoundaryRecord] = {}
+
+    def register(
+        self,
+        boundary_id: str,
+        model_id: str,
+        boundary_type: BoundaryType,
+        creator_id: str,
+        scope: list[str],
+    ) -> BoundaryRecord:
+        """Register a new boundary; raises RegistryDuplicateError if it already exists."""
+        if boundary_id in self._records:
+            raise RegistryDuplicateError()
+        record = BoundaryRecord(
+            boundary_id=boundary_id,
+            model_id=model_id,
+            boundary_type=boundary_type,
+            creator_id=creator_id,
+            scope=list(scope),
+        )
+        self._records[boundary_id] = record
+        return record
+
+    def get(self, boundary_id: str) -> BoundaryRecord:
+        """Return a boundary record; raises RegistryNotFoundError if missing."""
+        if boundary_id not in self._records:
+            raise RegistryNotFoundError()
+        return self._records[boundary_id]
+
+    def list_active(self) -> list[BoundaryRecord]:
+        """Return all active boundary records."""
+        return [r for r in self._records.values() if r.active]
+
+    def list_for_model(self, model_id: str) -> list[BoundaryRecord]:
+        """Return all active records for a given model."""
+        return [r for r in self._records.values() if r.active and r.model_id == model_id]
+
+    def deactivate(self, boundary_id: str) -> None:
+        """Mark a boundary as inactive."""
+        record = self.get(boundary_id)
+        record.active = False
+
+    def update_scope(self, boundary_id: str, scope: list[str]) -> None:
+        """Update the scope of an existing boundary without changing its creator."""
+        record = self.get(boundary_id)
+        record.scope = list(scope)
+
+    def assert_creator_locked(self, boundary_id: str, creator_id: str) -> None:
+        """Raise CreatorLockedError if *creator_id* differs from the registered creator."""
+        record = self.get(boundary_id)
+        if record.creator_id != creator_id:
+            raise CreatorLockedError()
+
+    def assert_no_conversion(self, boundary_id: str, new_type: BoundaryType) -> None:
+        """Raise SIAError if *new_type* differs from the boundary's registered type."""
+        record = self.get(boundary_id)
+        if record.boundary_type != new_type:
+            raise SIAError(
+                code=codes.E_REGISTRY_CONVERSION_DENIED,
+                message=(
+                    f"boundary {boundary_id!r}: conversion from "
+                    f"{record.boundary_type!r} to {new_type!r} is not permitted"
+                ),
+            )
+
+
+# ── Canonical governance model ─────────────────────────────────────────────────
 
 @dataclass(frozen=True)
 class BoundaryDefinition:

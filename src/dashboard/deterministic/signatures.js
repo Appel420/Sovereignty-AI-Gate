@@ -1,5 +1,5 @@
 /**
- * signatures.js — Deterministic Ed25519/ECDSA signature helpers.
+ * signatures.js — Browser-native ECDSA P-521 signature helpers.
  *
  * Uses the Web Crypto API exclusively. Non-deterministic entropy is NEVER used.
  */
@@ -8,12 +8,12 @@
 
 const signatures = (() => {
   /**
-   * Generate an ECDSA P-256 key pair for signing authority records.
+   * Generate an ECDSA P-521 key pair for signing authority records.
    * @returns {Promise<CryptoKeyPair>}
    */
   async function generateKeyPair() {
     return crypto.subtle.generateKey(
-      { name: "ECDSA", namedCurve: "P-256" },
+      { name: "ECDSA", namedCurve: "P-521" },
       true,
       ["sign", "verify"]
     );
@@ -27,7 +27,7 @@ const signatures = (() => {
    */
   async function sign(privateKey, data) {
     const raw = await crypto.subtle.sign(
-      { name: "ECDSA", hash: "SHA-256" },
+      { name: "ECDSA", hash: "SHA-512" },
       privateKey,
       data instanceof Uint8Array ? data : new Uint8Array(data)
     );
@@ -46,7 +46,7 @@ const signatures = (() => {
   async function verify(publicKey, signatureHex, data) {
     const sigBytes = hexToBytes(signatureHex);
     return crypto.subtle.verify(
-      { name: "ECDSA", hash: "SHA-256" },
+      { name: "ECDSA", hash: "SHA-512" },
       publicKey,
       sigBytes,
       data instanceof Uint8Array ? data : new Uint8Array(data)
@@ -71,7 +71,7 @@ const signatures = (() => {
     return crypto.subtle.importKey(
       "jwk",
       jwk,
-      { name: "ECDSA", namedCurve: "P-256" },
+      { name: "ECDSA", namedCurve: "P-521" },
       true,
       ["verify"]
     );

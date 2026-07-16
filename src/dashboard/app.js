@@ -12,9 +12,9 @@ import threatFeed from "./deterministic/threat_feed.js";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-async function sha256Hex(str) {
+async function sha512Hex(str) {
   const encoded = new TextEncoder().encode(str);
-  const digest = await crypto.subtle.digest("SHA-256", encoded);
+  const digest = await crypto.subtle.digest("SHA-512", encoded);
   return Array.from(new Uint8Array(digest))
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
@@ -94,7 +94,7 @@ async function init() {
 
   // Compute deterministic state hash
   const stateStr = JSON.stringify(state);
-  const stateHash = await sha256Hex(stateStr);
+  const stateHash = await sha512Hex(stateStr);
   setText("state-hash", `State: ${stateHash.slice(0, 16)}…`);
 }
 

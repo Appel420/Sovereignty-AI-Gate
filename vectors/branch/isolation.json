@@ -1,0 +1,38 @@
+{
+  "expected": {
+    "other_root_branch_id": "028133957bd5a0f842660f979dd3c2276f9805bbdc744c7e38622749b8f266849e57e1b43f265f4696640c23b3061891ed3397b8bde6d3cc1841b9a0f258f9db",
+    "other_root_key_hex": "6af808c311bce34c17d7f028307753a39fa1343ddfc0f8235a297247e7b585fe",
+    "sibling_a_branch_id": "13198b2b2281663f36a04bafdb5ee5dc1efdad9ff0caf6ee30a1f6008e0d4e59fb7123646b4d5aa96ef5a64783bf13aa339dc682ba56c35ad6e61c3d048bd0e4",
+    "sibling_a_key_hex": "f8a4ec4c5948e652cb5fc90f54ef0e88223bbbe8e1b30b5df3fb1229bc757b1f",
+    "sibling_b_branch_id": "7e9c2b23db6eabf45d3be3da3a645522c394376e58b3e7a33d35f45d0916ded6137d2e23f2dd492fbdd67e0afd8b1406fe6d3e31d038f958bdc0038aef18025a",
+    "sibling_b_key_hex": "1548b563dfbc5d175192f13c52180778d2a53e6df87cc899e2acca941d45a2a8"
+  },
+  "inputs": {
+    "other_root_same_label": {
+      "capabilities": [
+        "READ"
+      ],
+      "created_at": 1700000000,
+      "label": "sib-a"
+    },
+    "root_a_secret_hex": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "root_b_secret_hex": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "root_created_at": 1700000000,
+    "sibling_a": {
+      "capabilities": [
+        "READ"
+      ],
+      "created_at": 1700000000,
+      "label": "sib-a"
+    },
+    "sibling_b": {
+      "capabilities": [
+        "READ"
+      ],
+      "created_at": 1700000000,
+      "label": "sib-b"
+    }
+  },
+  "suite_id": "SBP-INTEROP-0.2/Ed25519-SHA3-512-AES-256-GCM",
+  "vector_version": "SBP-TEST-VECTORS-0.2"
+}

@@ -141,3 +141,12 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+# Python cache
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Python packaging artifacts
+*.egg-info/
+dist/
+build/

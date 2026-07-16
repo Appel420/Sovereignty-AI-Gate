@@ -1,0 +1,49 @@
+{
+  "expected": {
+    "bundle": {
+      "branch_id": "branch-audit-test",
+      "entries": [
+        {
+          "action": "GENESIS_TEST",
+          "actor_id": "root-actor",
+          "branch_id": "branch-audit-test",
+          "entry_hash": "4995cdb0d0f84cb67fd005070d8d6c2cc350d7e491d95f1d2f03899b7b1071d1a7666c664e46c0b5cd6d0ab031370a066dc68d4a0d618800d4526bbc15729033",
+          "entry_id": "00000000-0000-4000-8000-000000000001",
+          "metadata_hash": null,
+          "object_id": null,
+          "previous_hash": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "sequence": 0,
+          "signature": "ca2f7f40973f07d4a4f6c5055f619894dd96e66b983482b9f4d113de9eb7b8f6e5ed35456fd12b61dd718857308f1e872694074850015f9a0243ef538ead1f0e",
+          "timestamp": "2023-11-14T22:13:20Z"
+        }
+      ],
+      "entry_count": 1,
+      "format": "SBP-AUDIT-BUNDLE-0.1",
+      "root_id": "4a581ba98df6879ee7ef0d54818fc81b7177285bf463f4fae772902e12317943eda88f048c8ec1dc01d0fd77d4a37ad74e00a2ca2654e4d72a0887fa49da68dc"
+    },
+    "entry": {
+      "action": "GENESIS_TEST",
+      "actor_id": "root-actor",
+      "branch_id": "branch-audit-test",
+      "entry_hash": "4995cdb0d0f84cb67fd005070d8d6c2cc350d7e491d95f1d2f03899b7b1071d1a7666c664e46c0b5cd6d0ab031370a066dc68d4a0d618800d4526bbc15729033",
+      "entry_id": "00000000-0000-4000-8000-000000000001",
+      "metadata_hash": null,
+      "object_id": null,
+      "previous_hash": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "sequence": 0,
+      "signature": "ca2f7f40973f07d4a4f6c5055f619894dd96e66b983482b9f4d113de9eb7b8f6e5ed35456fd12b61dd718857308f1e872694074850015f9a0243ef538ead1f0e",
+      "timestamp": "2023-11-14T22:13:20Z"
+    }
+  },
+  "inputs": {
+    "action": "GENESIS_TEST",
+    "actor_id": "root-actor",
+    "branch_id": "branch-audit-test",
+    "entry_id": "00000000-0000-4000-8000-000000000001",
+    "root_created_at": 1700000002,
+    "root_secret_hex": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "timestamp": "2023-11-14T22:13:20Z"
+  },
+  "suite_id": "SBP-INTEROP-0.2/Ed25519-SHA3-512-AES-256-GCM",
+  "vector_version": "SBP-TEST-VECTORS-0.2"
+}
