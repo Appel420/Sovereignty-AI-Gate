@@ -18,7 +18,7 @@ python3 -m venv "${ROOT}/.venv"
 # shellcheck source=/dev/null
 source "${ROOT}/.venv/bin/activate"
 pip install --upgrade pip
-pip install -e "${ROOT}[dev]"
+pip install -c "${ROOT}/constraints/py312.txt" -e "${ROOT}[dev]"
 echo "    Python environment ready."
 
 # ── Node.js ───────────────────────────────────────────────────────────────────

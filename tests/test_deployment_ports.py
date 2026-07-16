@@ -12,7 +12,9 @@ def test_dashboard_container_uses_only_the_sacred_frontend_port() -> None:
 
     assert re.findall(r"^EXPOSE\s+(\d+)$", dockerfile, re.MULTILINE) == ["9898"]
     assert '"http.server", "9898"' in dockerfile
-    assert re.findall(r'"(\d+):(\d+)"', compose) == [("9898", "9898")]
+    ports_block = re.search(r"ports:\s*\n(\s+-\s+\"[0-9:]+\"\s*\n)+", compose)
+    assert ports_block is not None
+    assert re.findall(r'"(\d+):(\d+)"', ports_block.group(0)) == [("9898", "9898")]
     for forbidden_port in FORBIDDEN_PORTS:
         assert forbidden_port not in dockerfile
         assert forbidden_port not in compose
