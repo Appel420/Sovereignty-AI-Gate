@@ -137,6 +137,7 @@ class AuditChain:
         object_id: str | None = None,
         metadata: dict[str, Any] | None = None,
         timestamp: str | None = None,
+        entry_id: str | None = None,
     ) -> AuditEntry:
         """
         Append a signed, hash-chained audit entry.
@@ -155,9 +156,14 @@ class AuditChain:
             plaintext metadata is not retained in the chain.
         timestamp:
             Optional UTC ISO-8601 timestamp.  Defaults to ``time.time()``.
+        entry_id:
+            Optional explicit entry identifier for deterministic vectors and
+            tests.  When omitted a fresh UUID4 is generated.
         """
         if not action:
             raise ValueError("AuditChain.append requires a non-empty action")
+        if entry_id is not None and not isinstance(entry_id, str):
+            raise TypeError("AuditChain.append entry_id must be a string")
 
         sequence = len(self._entries)
         previous_hash = (
@@ -172,7 +178,7 @@ class AuditChain:
 
         signing_doc: dict[str, Any] = {
             "sequence": sequence,
-            "entry_id": str(uuid4()),
+            "entry_id": entry_id if entry_id is not None else str(uuid4()),
             "timestamp": ts,
             "branch_id": self._branch_id,
             "actor_id": actor_id,

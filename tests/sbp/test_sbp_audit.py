@@ -180,6 +180,23 @@ def test_append_requires_nonempty_action():
         chain.append(actor_id="actor", action="")
 
 
+def test_append_preserves_explicit_empty_entry_id():
+    chain = make_chain()
+    entry = chain.append(
+        actor_id="actor",
+        action="EMPTY_ID",
+        entry_id="",
+        timestamp=FIXED_STAMP,
+    )
+    assert entry.entry_id == ""
+
+
+def test_append_rejects_non_string_entry_id():
+    chain = make_chain()
+    with pytest.raises(TypeError, match="entry_id must be a string"):
+        chain.append(actor_id="actor", action="BAD_ID", entry_id=123)
+
+
 # ── Export bundle ─────────────────────────────────────────────────────────────
 
 def test_export_bundle_structure():

@@ -175,7 +175,12 @@ class ObjectEnvelope:
         }
 
 
-def seal_manifest(manifest: ObjectManifest, branch: Branch) -> ObjectEnvelope:
+def seal_manifest(
+    manifest: ObjectManifest,
+    branch: Branch,
+    *,
+    nonce: bytes | None = None,
+) -> ObjectEnvelope:
     """
     Encrypt *manifest* under branch-scoped key material.
 
@@ -185,9 +190,21 @@ def seal_manifest(manifest: ObjectManifest, branch: Branch) -> ObjectEnvelope:
 
     The branch key is derived on demand via ``branch.derive_key()``; it is
     not stored by this function.
+
+    When ``nonce`` is omitted, a fresh cryptographically random 96-bit nonce
+    is generated.  The optional ``nonce`` parameter exists only for frozen
+    interoperability vectors and deterministic tests; production callers
+    should rely on the default random nonce generation.
     """
     key = branch.derive_key(length=32)
-    nonce = os.urandom(12)
+    if nonce is None:
+        nonce = os.urandom(12)
+    elif not isinstance(nonce, bytes):
+        raise TypeError("seal_manifest nonce must be bytes")
+    else:
+        nonce = bytes(nonce)
+    if len(nonce) != 12:
+        raise ValueError("seal_manifest nonce must be exactly 12 bytes")
     plaintext = canonical_bytes(manifest.to_dict())
     aesgcm = AESGCM(key)
     ciphertext = aesgcm.encrypt(nonce, plaintext, None)
