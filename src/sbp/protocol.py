@@ -127,7 +127,6 @@ def verify_authority_exchange(record: AuthorityExchange) -> bool:
     from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
     try:
-       # copilot/add-fedramp-schema-support
         exchange_id = _require_string(record.exchange_id, "exchange_id")
         peer_id = _require_string(record.peer_id, "peer_id")
         root_id = _require_string(record.root_id, "root_id")
@@ -158,7 +157,9 @@ def verify_authority_exchange(record: AuthorityExchange) -> bool:
         key.verify(bytes.fromhex(signature), canonical_bytes(signing_doc))
         return True
     except (ProtocolError, InvalidSignature, ValueError, TypeError):
+        pass
 
+    try:
         signing_key_bytes = bytes.fromhex(record.signing_public_key)
         expected_root_id = hashlib.sha3_512(
             b"SBP_ROOT_SIGNING_IDENTITY:" + signing_key_bytes
@@ -172,8 +173,7 @@ def verify_authority_exchange(record: AuthorityExchange) -> bool:
             canonical_bytes(record.signing_document()),
         )
         return True
-    except (InvalidSignature, ValueError, TypeError):
-        main
+    except (ProtocolError, InvalidSignature, ValueError, TypeError):
         return False
 
 
