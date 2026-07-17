@@ -425,7 +425,7 @@
     "x-sovereignty": {
       "type": "object",
       "description": "Sovereignty AI governance extension. Contains authority-chain, Merkle-ledger, and ML-DSA attestation metadata. This is a vendor extension namespace and does not alter core FedRAMP schema requirements.",
-      "$ref": "https://sovereignty-ai-gate/schemas/fedramp/x-sovereignty-extension/v1.0.0"
+      "$ref": "https://sovereignty-ai-gate/schemas/fedramp/x-sovereignty-extension/v1.1.0"
     }
   },
   "required": [

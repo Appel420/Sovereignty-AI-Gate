@@ -123,10 +123,10 @@ def test_x_sovereignty_all_parameter_sets() -> None:
         _assert_valid(d)
 
 
-def test_x_sovereignty_missing_authority_root_invalid() -> None:
-    """Removing authorityRoot from x-sovereignty must fail validation."""
+def test_x_sovereignty_missing_authority_id_invalid() -> None:
+    """Removing authorityId from x-sovereignty must fail validation."""
     doc = _load_example("valid-with-sovereignty.json")
-    del doc["x-sovereignty"]["authorityRoot"]
+    del doc["x-sovereignty"]["authorityId"]
     _assert_invalid(doc)
 
 
@@ -168,6 +168,23 @@ def test_x_sovereignty_authority_policy_version_pattern() -> None:
     bad = copy.deepcopy(doc)
     bad["x-sovereignty"]["authorityPolicyVersion"] = "v2.0"
     _assert_invalid(bad)
+
+
+def test_x_sovereignty_merkle_metadata_required_with_root() -> None:
+    """A Merkle root must declare its format and leaf canonicalization."""
+    doc = _load_example("valid-with-sovereignty.json")
+    del doc["x-sovereignty"]["leafHashAlgorithm"]
+    _assert_invalid(doc)
+
+
+def test_x_sovereignty_implementation_metadata_is_not_pinned() -> None:
+    """Any versioned ML-DSA implementation may be identified by metadata."""
+    doc = _load_example("valid-with-sovereignty.json")
+    implementation = doc["x-sovereignty"]["mlDsaImplementation"]
+    implementation["implementation"] = "independent-mldsa"
+    implementation["version"] = "9.8.7"
+    implementation.pop("implementationURI")
+    _assert_valid(doc)
 
 
 # ---------------------------------------------------------------------------

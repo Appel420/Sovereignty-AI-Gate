@@ -32,10 +32,10 @@ Sovereignty AI Gate FedRAMP evidence automation pipeline:
 │  │  x-sovereignty                                         │  │
 │  │  (x-sovereignty-extension.schema.json)                 │  │
 │  │                                                        │  │
-│  │  authorityRoot    merkleRoot      auditChainId         │  │
+│  │  authorityId      merkleRoot      auditChainId         │  │
 │  │  scarLedgerReference              mlDsaAttestation     │  │
 │  │  authorityPolicyVersion           evidenceDigest       │  │
-│  │  implementationReference                               │  │
+│  │  implementation metadata                               │  │
 │  └────────────────────────────────────────────────────────┘  │
 └──────────────────────────────────────────────────────────────┘
 ```
@@ -188,4 +188,4 @@ Test coverage includes:
 - Invalid format / enum values (authorizationLevel, service type, email format, control identifier)
 - Conditional authenticated-repository validation (`authenticationRequired → authenticationMechanism`)
 - Digest algorithm and pattern validation (artifacts and manifest)
-- x-sovereignty field constraints (authorityRoot, auditChainId, evidenceDigest prefix pattern, etc.)
+- x-sovereignty field constraints (versioned authority, Merkle, audit-chain, and evidence digest metadata)

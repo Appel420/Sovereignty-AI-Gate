@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://sovereignty-ai-gate/schemas/fedramp/x-sovereignty-extension/v1.0.0",
+  "$id": "https://sovereignty-ai-gate/schemas/fedramp/x-sovereignty-extension/v1.1.0",
   "title": "x-sovereignty Extension",
-  "description": "Sovereignty AI governance extension namespace for FedRAMP package metadata. Carries authority-chain identifiers, Merkle-ledger references, SCAR audit chain linkage, ML-DSA (FIPS 204) attestation metadata, and evidence digests. This schema is a vendor extension; it does not alter or replace core FedRAMP schema requirements. The ML-DSA implementation reference is Appel420/sovereign-mldsa-native (portable C90 ML-DSA/FIPS 204 implementation). Schema fields capture attestation *references* and *metadata*; the schema itself does not perform any cryptographic operation.",
+  "description": "Sovereignty AI governance extension namespace for FedRAMP-compatible evidence metadata. Carries versioned authority identifiers, Merkle-ledger references, SCAR audit chain linkage, ML-DSA (FIPS 204) attestation metadata, and evidence digests. This project-specific vendor extension does not alter or replace official FedRAMP requirements. Schema fields capture attestation references and metadata; the schema itself does not perform cryptographic operations.",
   "type": "object",
   "$defs": {
     "mlDsaParameterSet": {
@@ -157,13 +157,48 @@
         }
       },
       "required": ["ledgerId", "entryId", "entryDigestAlgorithm", "entryDigest"]
+    },
+    "mlDsaImplementation": {
+      "title": "ML-DSA Implementation Metadata",
+      "description": "Identifies the ML-DSA algorithm and implementation used for attestation without pinning the protocol to a particular repository.",
+      "type": "object",
+      "properties": {
+        "algorithm": {
+          "type": "string",
+          "const": "ML-DSA"
+        },
+        "implementation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "implementationURI": {
+          "type": "string",
+          "format": "uri"
+        }
+      },
+      "required": ["algorithm", "implementation", "version"],
+      "additionalProperties": false
     }
   },
   "properties": {
-    "authorityRoot": {
+    "authorityId": {
       "type": "string",
-      "description": "Hex-encoded digest or opaque identifier representing the root-of-trust authority that governs this package. Corresponds to the sovereign authority established in sovereignty_core.",
+      "description": "Stable identifier for the root-of-trust authority that governs this package.",
       "minLength": 1
+    },
+    "authorityVersion": {
+      "type": "string",
+      "description": "Version of the authority identity and governance document used for this package.",
+      "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "authorityFingerprint": {
+      "type": "string",
+      "description": "Fingerprint of the authority key or root document, used to distinguish rotated authority material.",
+      "pattern": "^[0-9a-f]{64,128}$"
     },
     "merkleRoot": {
       "type": "string",
@@ -175,9 +210,44 @@
       "description": "Hash algorithm used to compute leaf hashes and internal nodes of the Merkle tree.",
       "enum": ["sha-256", "sha-384", "sha-512", "sha3-256", "sha3-512", "blake3"]
     },
+    "merkleTreeFormat": {
+      "type": "string",
+      "description": "Versioned format defining node ordering, domain separation, and parent-node construction.",
+      "minLength": 1
+    },
+    "canonicalizationVersion": {
+      "type": "string",
+      "description": "Version of the canonical serialization used for Merkle leaves.",
+      "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "leafHashAlgorithm": {
+      "type": "string",
+      "description": "Hash algorithm used specifically for Merkle leaf values.",
+      "enum": ["sha-256", "sha-384", "sha-512", "sha3-256", "sha3-512", "blake3"]
+    },
     "auditChainId": {
       "type": "string",
       "description": "Identifier of the sovereign audit chain (SCAR ledger) instance to which this package is anchored.",
+      "minLength": 1
+    },
+    "auditLedgerVersion": {
+      "type": "string",
+      "description": "Version of the audit ledger protocol used by auditChainId.",
+      "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "auditLedgerType": {
+      "type": "string",
+      "description": "Type of ledger identified by auditChainId.",
+      "minLength": 1
+    },
+    "anchorFrequency": {
+      "type": "string",
+      "description": "Declared frequency at which audit entries are anchored or checkpointed.",
+      "minLength": 1
+    },
+    "checkpointId": {
+      "type": "string",
+      "description": "Identifier of the ledger checkpoint containing this package anchor.",
       "minLength": 1
     },
     "scarLedgerReference": {
@@ -197,12 +267,33 @@
       "description": "Prefixed hex-encoded digest over the canonical serialization of all evidence records (e.g. 'sha3-512:<hex>'). Provides a single integrity anchor for the full evidence set.",
       "pattern": "^(sha-256|sha-384|sha-512|sha3-256|sha3-512|blake3):[0-9a-f]{64,128}$"
     },
-    "implementationReference": {
-      "type": "string",
-      "description": "Source repository or artifact reference for the ML-DSA implementation used to produce attestations in this package.",
-      "const": "https://github.com/Appel420/sovereign-mldsa-native"
+    "mlDsaImplementation": {
+      "$ref": "#/$defs/mlDsaImplementation",
+      "description": "Algorithm, implementation, and version metadata for the ML-DSA attestation producer."
     }
   },
-  "required": ["authorityRoot", "auditChainId"],
+  "required": [
+    "authorityId",
+    "authorityVersion",
+    "authorityFingerprint",
+    "auditChainId",
+    "auditLedgerVersion",
+    "auditLedgerType",
+    "anchorFrequency",
+    "checkpointId"
+  ],
+  "allOf": [
+    {
+      "if": { "required": ["merkleRoot"] },
+      "then": {
+        "required": [
+          "merkleRootAlgorithm",
+          "merkleTreeFormat",
+          "canonicalizationVersion",
+          "leafHashAlgorithm"
+        ]
+      }
+    }
+  ],
   "additionalProperties": false
 }
