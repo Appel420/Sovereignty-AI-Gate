@@ -127,20 +127,36 @@ def verify_authority_exchange(record: AuthorityExchange) -> bool:
     from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
     try:
-        signing_key_bytes = bytes.fromhex(record.signing_public_key)
+        exchange_id = _require_string(record.exchange_id, "exchange_id")
+        peer_id = _require_string(record.peer_id, "peer_id")
+        root_id = _require_string(record.root_id, "root_id")
+        signing_public_key = _require_string(record.signing_public_key, "signing_public_key")
+        signature = _require_string(record.signature, "signature")
+
+        signing_key_bytes = bytes.fromhex(signing_public_key)
         expected_root_id = hashlib.sha3_512(
             b"SBP_ROOT_SIGNING_IDENTITY:" + signing_key_bytes
         ).hexdigest()
-        if record.root_id != expected_root_id:
+        if root_id != expected_root_id:
             return False
 
+        caps = tuple(_require_string(c, "capability") for c in record.capabilities)
+        if len(set(caps)) != len(caps) or tuple(sorted(caps)) != caps:
+            return False
+
+        signing_doc = {
+            "version": record.version,
+            "exchange_id": exchange_id,
+            "peer_id": peer_id,
+            "root_id": root_id,
+            "signing_public_key": signing_public_key,
+            "capabilities": list(caps),
+        }
+
         key = Ed25519PublicKey.from_public_bytes(signing_key_bytes)
-        key.verify(
-            bytes.fromhex(record.signature),
-            canonical_bytes(record.signing_document()),
-        )
+        key.verify(bytes.fromhex(signature), canonical_bytes(signing_doc))
         return True
-    except (InvalidSignature, ValueError, TypeError):
+    except (ProtocolError, InvalidSignature, ValueError, TypeError):
         return False
 
 
