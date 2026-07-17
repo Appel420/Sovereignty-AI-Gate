@@ -1,6 +1,10 @@
 cryptography==49.0.0
 pytest==9.1.1
 pytest-cov==7.1.0
+jsonschema==4.23.0
+jsonschema-specifications==2025.9.1
+referencing==0.37.0
+rpds-py==2026.6.3
 cffi==2.1.0
 coverage==7.15.2
 iniconfig==2.3.0

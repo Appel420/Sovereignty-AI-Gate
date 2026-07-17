@@ -1,0 +1,153 @@
+{
+  "$schema": "https://sovereignty-ai-gate/schemas/fedramp/fedramp-package-overview/v1.0.0",
+  "schemaCompatibility": {
+    "schemaRevision": "1.0.0",
+    "fedrampRevision": "Rev5",
+    "nistRevision": "SP800-53r5"
+  },
+  "packageId": "pkg-20260717-fedramp-high-gateone-sovereign",
+  "packageTitle": "GateOne Sovereign AI Gateway — FedRAMP High + Sovereignty Extension",
+  "createdAt": "2026-07-17T00:00:00Z",
+  "lastModifiedAt": "2026-07-17T07:00:00Z",
+  "disclaimer": "Validation against this schema does not constitute FedRAMP authorization or compliance certification. This document is for internal evidence-readiness purposes only.",
+  "serviceIdentification": {
+    "csoName": "GateOne Sovereign AI Gateway",
+    "csoId": "CSO-2026-GATEONE-002",
+    "cspName": "Sovereignty-One",
+    "authorizationLevel": "High",
+    "serviceType": "SaaS",
+    "deploymentModel": "Government-Only",
+    "operationalStatus": "In Development"
+  },
+  "contacts": {
+    "authorizedOfficial": {
+      "name": "Authority Official",
+      "title": "Chief Information Security Officer",
+      "email": "ao@sovereignty-one.example",
+      "organization": "Sovereignty-One"
+    },
+    "informationSystemSecurityOfficer": {
+      "name": "Security Officer",
+      "title": "ISSO",
+      "email": "isso@sovereignty-one.example",
+      "organization": "Sovereignty-One"
+    }
+  },
+  "authorizationBoundary": {
+    "description": "Includes GateOne API gateway, Sovereignty Core, SCAR ledger, SIA memory subsystem, and sovereign-mldsa-native attestation engine. Excludes external AI provider APIs and public CI infrastructure."
+  },
+  "certifiedServices": [
+    {
+      "serviceId": "svc-gateone-api",
+      "serviceName": "GateOne API Gateway",
+      "description": "Offline-first, user-rooted authority gateway with ML-DSA-87 post-quantum attestation."
+    }
+  ],
+  "controlMappings": [
+    {
+      "control": "AC-2",
+      "controlFamily": "Access Control",
+      "implementationStatus": "Implemented",
+      "responsibleRole": "GateOne Authority Engine",
+      "evidence": ["ev-access-policy-pdf"]
+    },
+    {
+      "control": "AU-9",
+      "controlFamily": "Audit and Accountability",
+      "implementationStatus": "Implemented",
+      "responsibleRole": "SCAR Audit Ledger",
+      "evidence": ["ev-scar-ledger-export"]
+    },
+    {
+      "control": "SC-13",
+      "controlFamily": "System and Communications Protection",
+      "implementationStatus": "Implemented",
+      "responsibleRole": "sovereign-mldsa-native",
+      "evidence": ["ev-mldsa-attestation-bundle"]
+    }
+  ],
+  "artifactManifest": {
+    "manifestVersion": "1.0.0",
+    "artifacts": [
+      {
+        "artifactId": "ev-access-policy-pdf",
+        "filename": "evidence/access-policy.pdf",
+        "mediaType": "application/pdf",
+        "digestAlgorithm": "sha-512",
+        "digest": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f"
+      },
+      {
+        "artifactId": "ev-scar-ledger-export",
+        "filename": "evidence/scar-ledger-2026-07.ndjson",
+        "mediaType": "application/x-ndjson",
+        "digestAlgorithm": "sha-512",
+        "digest": "404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f"
+      },
+      {
+        "artifactId": "ev-mldsa-attestation-bundle",
+        "filename": "evidence/mldsa87-attestation.bin",
+        "mediaType": "application/octet-stream",
+        "digestAlgorithm": "sha-512",
+        "digest": "707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0"
+      }
+    ],
+    "cryptographicMetadata": {
+      "manifestDigestAlgorithm": "sha-512",
+      "manifestDigest": "a0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecf",
+      "signatureAlgorithm": "ML-DSA-87",
+      "signedAt": "2026-07-17T07:00:00Z"
+    }
+  },
+  "x-sovereignty": {
+    "authorityId": "sovereign-authority-gateone",
+    "authorityVersion": "v1.0.0",
+    "authorityFingerprint": "d0e1f2a3b4c5d6e7f8091a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f90011220",
+    "merkleRoot": "334455667788990011223344556677889900aabbccddeeff001122334455667788",
+    "merkleRootAlgorithm": "sha3-512",
+    "merkleTreeFormat": "sbp-merkle-v1",
+    "canonicalizationVersion": "v1.0.0",
+    "leafHashAlgorithm": "sha3-512",
+    "auditChainId": "scar-chain-gateone-prod-2026",
+    "auditLedgerVersion": "v1.0.0",
+    "auditLedgerType": "SCAR",
+    "anchorFrequency": "per-package",
+    "checkpointId": "scar-checkpoint-000042",
+    "scarLedgerReference": {
+      "ledgerId": "scar-device-001",
+      "entryId": "entry-00000042",
+      "entryDigestAlgorithm": "sha3-512",
+      "entryDigest": "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899aabb",
+      "sequenceNumber": 42,
+      "committedAt": "2026-07-17T06:59:00Z"
+    },
+    "mlDsaAttestation": {
+      "kind": "attestation-reference",
+      "parameterSet": "ML-DSA-87",
+      "attestationBundleId": "attestation-bundle-gateone-pkg-20260717",
+      "attestationBundleUri": "file:evidence/mldsa87-attestation.bin",
+      "bundleDigestAlgorithm": "sha-512",
+      "bundleDigest": "707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0",
+      "signerPublicKeyId": "key-mldsa87-gateone-root-001",
+      "issuedAt": "2026-07-17T06:58:00Z"
+    },
+    "authorityPolicyVersion": "policy-v1.0.0",
+    "evidenceDigest": "sha3-512:112233445566778899aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff0011",
+    "mlDsaImplementation": {
+      "algorithm": "ML-DSA",
+      "implementation": "sovereign-mldsa-native",
+      "version": "1.2.0",
+      "implementationURI": "https://github.com/Appel420/sovereign-mldsa-native"
+    },
+    "sovereigntyProtocol": {
+      "name": "SBP",
+      "version": "0.2.0",
+      "capabilities": [
+        "authority-chain",
+        "branch-governance",
+        "scar-audit",
+        "mldsa-attestation",
+        "encrypted-replication"
+      ]
+    }
+  }
+}

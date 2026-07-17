@@ -1,0 +1,19 @@
+{
+  "inputs": {
+    "branch_id": "branch:main",
+    "first": {
+      "actor_id": "peer:local",
+      "action": "BRANCH_CREATED",
+      "timestamp": "2023-11-14T22:13:20Z",
+      "entry_id": "audit-0001"
+    },
+    "second": {
+      "actor_id": "peer:local",
+      "action": "DELEGATION_ISSUED",
+      "object_id": "object-0001",
+      "metadata": {"scope": "READ"},
+      "timestamp": "2023-11-14T22:13:21Z",
+      "entry_id": "audit-0002"
+    }
+  }
+}

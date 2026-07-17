@@ -1,0 +1,173 @@
+{
+  "$schema": "https://sovereignty-ai-gate/schemas/fedramp/fedramp-package-overview/v1.0.0",
+  "schemaCompatibility": {
+    "schemaRevision": "1.0.0",
+    "fedrampRevision": "Rev5",
+    "nistRevision": "SP800-53r5"
+  },
+  "packageId": "pkg-20260717-fedramp-moderate-gateone",
+  "packageTitle": "GateOne Sovereign AI Gateway — FedRAMP Moderate Authorization Package",
+  "createdAt": "2026-07-17T00:00:00Z",
+  "lastModifiedAt": "2026-07-17T07:00:00Z",
+  "disclaimer": "Validation against this schema does not constitute FedRAMP authorization or compliance certification. This document is for internal evidence-readiness purposes only.",
+  "serviceIdentification": {
+    "csoName": "GateOne Sovereign AI Gateway",
+    "csoId": "CSO-2026-GATEONE-001",
+    "cspName": "Sovereignty-One",
+    "authorizationLevel": "Moderate",
+    "serviceType": "SaaS",
+    "deploymentModel": "Government-Only",
+    "operationalStatus": "In Development"
+  },
+  "contacts": {
+    "authorizedOfficial": {
+      "name": "Authority Official",
+      "title": "Chief Information Security Officer",
+      "email": "ao@sovereignty-one.example",
+      "organization": "Sovereignty-One"
+    },
+    "informationSystemSecurityOfficer": {
+      "name": "Security Officer",
+      "title": "ISSO",
+      "email": "isso@sovereignty-one.example",
+      "organization": "Sovereignty-One"
+    }
+  },
+  "assessor": {
+    "organizationName": "Example Third-Party Assessment Organization",
+    "a2laAccreditationId": "1234.56",
+    "assessmentLeadContact": {
+      "name": "Lead Assessor",
+      "email": "assessor@example-3pao.example"
+    },
+    "assessmentPeriodStart": "2026-06-01",
+    "assessmentPeriodEnd": "2026-08-31"
+  },
+  "authorizationBoundary": {
+    "description": "Includes GateOne API gateway, Sovereignty Core authority engine, SCAR audit ledger, and the SIA memory subsystem. Excludes third-party AI provider endpoints and CI/CD infrastructure.",
+    "excludedComponents": [
+      "api.openai.com",
+      "api.anthropic.com",
+      "api.x.ai"
+    ]
+  },
+  "certifiedServices": [
+    {
+      "serviceId": "svc-gateone-api",
+      "serviceName": "GateOne API Gateway",
+      "description": "User-rooted authority gateway enforcing offline-first ML-DSA attestation and SCAR audit logging.",
+      "inheritedControls": ["AC-2", "AC-3", "AU-9"]
+    },
+    {
+      "serviceId": "svc-sovereignty-core",
+      "serviceName": "Sovereignty Core Authority Engine",
+      "description": "Deterministic capability and policy enforcement engine."
+    }
+  ],
+  "thirdPartyResources": [
+    {
+      "resourceId": "tpr-openai",
+      "resourceName": "OpenAI API",
+      "provider": "OpenAI",
+      "fedrampAuthorized": false,
+      "dataClassification": "Unclassified",
+      "accessType": "Optional egress — authorized prompt payload only"
+    }
+  ],
+  "controlMappings": [
+    {
+      "control": "AC-2",
+      "controlFamily": "Access Control",
+      "implementationStatus": "Implemented",
+      "responsibleRole": "GateOne Authority Engine",
+      "evidence": ["ev-access-policy-pdf", "ev-consent-record-export"],
+      "remarks": "Account management enforced via SovereignAuthority capability tokens; consent-gated provider access."
+    },
+    {
+      "control": "AU-9",
+      "controlFamily": "Audit and Accountability",
+      "implementationStatus": "Implemented",
+      "responsibleRole": "SCAR Audit Ledger",
+      "evidence": ["ev-scar-ledger-export"],
+      "remarks": "Immutable Merkle-chained SCAR ledger with per-entry device signatures."
+    },
+    {
+      "control": "SC-13",
+      "controlFamily": "System and Communications Protection",
+      "implementationStatus": "Implemented",
+      "responsibleRole": "GateOne Verifier",
+      "evidence": ["ev-mldsa-attestation-bundle"],
+      "remarks": "ML-DSA-65 (FIPS 204) post-quantum cryptographic protection via sovereign-mldsa-native."
+    },
+    {
+      "control": "IA-5",
+      "controlFamily": "Identification and Authentication",
+      "implementationStatus": "Implemented",
+      "responsibleRole": "RootOfTrust Key Management",
+      "evidence": ["ev-key-management-policy"],
+      "remarks": "Authenticator management and key derivation through sovereign RootOfTrust backend."
+    }
+  ],
+  "artifactManifest": {
+    "manifestVersion": "1.0.0",
+    "artifacts": [
+      {
+        "artifactId": "ev-access-policy-pdf",
+        "filename": "evidence/access-policy.pdf",
+        "mediaType": "application/pdf",
+        "digestAlgorithm": "sha-384",
+        "digest": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f",
+        "sizeBytes": 245760
+      },
+      {
+        "artifactId": "ev-consent-record-export",
+        "filename": "evidence/consent-records.jsonl",
+        "mediaType": "application/jsonl",
+        "digestAlgorithm": "sha-384",
+        "digest": "303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f",
+        "sizeBytes": 8192
+      },
+      {
+        "artifactId": "ev-scar-ledger-export",
+        "filename": "evidence/scar-ledger-2026-07.ndjson",
+        "mediaType": "application/x-ndjson",
+        "digestAlgorithm": "sha-384",
+        "digest": "606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f",
+        "sizeBytes": 131072
+      },
+      {
+        "artifactId": "ev-mldsa-attestation-bundle",
+        "filename": "evidence/mldsa-attestation.bin",
+        "mediaType": "application/octet-stream",
+        "digestAlgorithm": "sha-512",
+        "digest": "909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebf",
+        "sizeBytes": 4096
+      },
+      {
+        "artifactId": "ev-key-management-policy",
+        "filename": "evidence/key-management-policy.pdf",
+        "mediaType": "application/pdf",
+        "digestAlgorithm": "sha-384",
+        "digest": "c0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeef",
+        "sizeBytes": 163840
+      }
+    ],
+    "cryptographicMetadata": {
+      "manifestDigestAlgorithm": "sha-384",
+      "manifestDigest": "f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+      "signatureAlgorithm": "ECDSA-P384-SHA384",
+      "signingCertificateId": "thumb:aabbccddeeff00112233445566778899",
+      "signedAt": "2026-07-17T07:00:00Z"
+    }
+  },
+  "repositories": [
+    {
+      "type": "git",
+      "uri": "https://github.com/Appel420/Sovereignty-AI-Gate",
+      "branch": "main",
+      "commitRef": "abc1234def5678",
+      "authenticationRequired": true,
+      "authenticationMechanism": "OAuth2"
+    }
+  ]
+}

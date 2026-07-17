@@ -18,6 +18,13 @@
     },
     {
       "ecosystem": "pip",
+      "name": "jsonschema",
+      "scope": "optional",
+      "source": "pyproject.toml",
+      "version": "4.23.0"
+    },
+    {
+      "ecosystem": "pip",
       "name": "liboqs-python",
       "scope": "optional",
       "source": "pyproject.toml",
@@ -41,9 +48,9 @@
   "repository": "Appel420/Sovereignty-AI-Gate",
   "schema": "Sovereignty-AI-Gate-SBOM-v1",
   "verification": {
-    "constraints/py312.txt.sha256": "77e662ee8350beb2442acc146549d8d968ede057602d7f4a282712d33ad656a6",
+    "constraints/py312.txt.sha256": "a3eeb4536b95a2c18ad63edef195a54b6c2a1720e569f916a3b0886cfb55b072",
     "package-lock.json.sha256": "4128b08e2cfd41c3ba8315e34ef43badae71b06055c5d405c796867cc27da5db",
     "package.json.sha256": "22481ca10fff2af29734af175fd1f913f9db7211b7c6143fc8b1df6ddc050d90",
-    "pyproject.toml.sha256": "b70866da55d412ed44b8af5e9efc69ce86311bae0ddfb905084ae02ab3b244e8"
+    "pyproject.toml.sha256": "e1dcb7cdc1280f0a8a1f8f4125950a10dbb417ece0ac0c8980449a4b802df002"
   }
 }
