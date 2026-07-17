@@ -157,23 +157,6 @@ def verify_authority_exchange(record: AuthorityExchange) -> bool:
         key.verify(bytes.fromhex(signature), canonical_bytes(signing_doc))
         return True
     except (ProtocolError, InvalidSignature, ValueError, TypeError):
-        pass
-
-    try:
-        signing_key_bytes = bytes.fromhex(record.signing_public_key)
-        expected_root_id = hashlib.sha3_512(
-            b"SBP_ROOT_SIGNING_IDENTITY:" + signing_key_bytes
-        ).hexdigest()
-        if record.root_id != expected_root_id:
-            return False
-
-        key = Ed25519PublicKey.from_public_bytes(signing_key_bytes)
-        key.verify(
-            bytes.fromhex(record.signature),
-            canonical_bytes(record.signing_document()),
-        )
-        return True
-    except (ProtocolError, InvalidSignature, ValueError, TypeError):
         return False
 
 
