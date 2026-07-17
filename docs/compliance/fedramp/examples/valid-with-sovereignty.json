@@ -101,7 +101,7 @@
   "x-sovereignty": {
     "authorityId": "sovereign-authority-gateone",
     "authorityVersion": "v1.0.0",
-    "authorityFingerprint": "d0e1f2a3b4c5d6e7f8091a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9001122",
+    "authorityFingerprint": "d0e1f2a3b4c5d6e7f8091a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f90011220",
     "merkleRoot": "334455667788990011223344556677889900aabbccddeeff001122334455667788",
     "merkleRootAlgorithm": "sha3-512",
     "merkleTreeFormat": "sbp-merkle-v1",
