@@ -182,9 +182,18 @@ def create_delegation(
     parent_capabilities: list[str] | None = None,
     expires_at: int | None = None,
 ) -> Delegation:
+    delegation_id = _require_string(delegation_id, "delegation_id")
+    grantee_id = _require_string(grantee_id, "grantee_id")
+    branch_id = _require_string(branch_id, "branch_id")
+
     caps = tuple(sorted(set(_require_string(c, "capability") for c in capabilities)))
-    if parent_capabilities is not None and not set(caps).issubset(parent_capabilities):
-        raise ProtocolError("delegation exceeds parent capabilities")
+    if parent_capabilities is not None:
+        parent_caps = set(
+            _require_string(c, "parent_capability") for c in parent_capabilities
+        )
+        if not set(caps).issubset(parent_caps):
+            raise ProtocolError("delegation exceeds parent capabilities")
+
     record = Delegation(
         delegation_id=delegation_id,
         grantor_id=root.metadata.root_id,
@@ -194,7 +203,8 @@ def create_delegation(
         expires_at=expires_at,
         signature="",
     )
-    return Delegation(**{**record.signing_document(), "signature": root.sign(canonical_bytes(record.signing_document()))})
+    signature = root.sign(canonical_bytes(record.signing_document()))
+    return Delegation(**{**record.signing_document(), "signature": signature})
 
 
 def verify_delegation(
