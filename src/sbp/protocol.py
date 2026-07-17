@@ -127,6 +127,7 @@ def verify_authority_exchange(record: AuthorityExchange) -> bool:
     from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
     try:
+       # copilot/add-fedramp-schema-support
         exchange_id = _require_string(record.exchange_id, "exchange_id")
         peer_id = _require_string(record.peer_id, "peer_id")
         root_id = _require_string(record.root_id, "root_id")
@@ -157,6 +158,22 @@ def verify_authority_exchange(record: AuthorityExchange) -> bool:
         key.verify(bytes.fromhex(signature), canonical_bytes(signing_doc))
         return True
     except (ProtocolError, InvalidSignature, ValueError, TypeError):
+
+        signing_key_bytes = bytes.fromhex(record.signing_public_key)
+        expected_root_id = hashlib.sha3_512(
+            b"SBP_ROOT_SIGNING_IDENTITY:" + signing_key_bytes
+        ).hexdigest()
+        if record.root_id != expected_root_id:
+            return False
+
+        key = Ed25519PublicKey.from_public_bytes(signing_key_bytes)
+        key.verify(
+            bytes.fromhex(record.signature),
+            canonical_bytes(record.signing_document()),
+        )
+        return True
+    except (InvalidSignature, ValueError, TypeError):
+        main
         return False
 
 
@@ -230,6 +247,7 @@ def verify_delegation(
     required_capability: str | None = None,
     now: int | None = None,
 ) -> bool:
+     # copilot/add-fedramp-schema-support
     try:
         if delegation.grantor_id != root.metadata.root_id:
             return False
@@ -255,6 +273,15 @@ def verify_delegation(
         return root.verify(canonical_bytes(signing_doc), delegation.signature)
     except (ProtocolError, TypeError, ValueError):
         return False
+
+    if delegation.grantor_id != root.metadata.root_id:
+        return False
+    if delegation.expires_at is not None and now is not None and now >= delegation.expires_at:
+        return False
+    if required_capability is not None and required_capability not in delegation.capabilities:
+        return False
+    return root.verify(canonical_bytes(delegation.signing_document()), delegation.signature)
+       d xv main
 
 
 @dataclass(frozen=True)
