@@ -276,7 +276,7 @@ Algorithm suite: `SBP-INTEROP-0.2/Ed25519-SHA3-512-AES-256-GCM`
 | `ReplicationRecord` | Encrypted `ObjectEnvelope` synchronization record (backup/sync only, no authority transfer) |
 | `negotiate_capabilities` | Fail-closed intersection of two `CapabilityOffer` sets |
 | `verify_authority_exchange` | Verifies an `AuthorityExchange` against its root signature |
-| `verify_delegation` | Verifies a `Delegation` against root and parent capability constraints |
+| `verify_delegation` | Verifies a `Delegation` against the issuing root signature, optional expiry, and required capability |
 | `resolve_replication_conflict` | Deterministic conflict resolution for concurrent replication records |
 
 ### SBP v0.2 Conformance Vectors (`tests/sbp_protocol/`)
