@@ -245,8 +245,8 @@ Two JSON Schema Draft 2020-12 definitions were added to support FedRAMP evidence
 
 The `x-sovereignty` extension (v1.1.0) declares:
 
-- **Versioned authority**: `authorityId`, `authorityPolicyVersion`, `evidenceDigest`
-- **Merkle evidence**: `merkleRoot`, `merkleAlgorithm`
+- **Versioned authority**: `authorityId`, `authorityVersion`, `authorityFingerprint`, `authorityPolicyVersion`, `evidenceDigest`
+- **Merkle evidence**: `merkleRoot`, `merkleRootAlgorithm`, `merkleTreeFormat`, `canonicalizationVersion`, `leafHashAlgorithm`
 - **SCAR audit chain**: `auditChainId`, `scarLedgerReference`
 - **ML-DSA attestation**: inline signature or external attestation-bundle reference (supports `ML-DSA-44`, `ML-DSA-65`, `ML-DSA-87`)
 - **SBP capability negotiation**: `sovereigntyProtocol` block declaring SBP name, semantic version, and supported capabilities
