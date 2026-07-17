@@ -44,7 +44,8 @@ class CapabilityOffer:
         _require_string(self.peer_id, "peer_id")
         if self.protocol != PROTOCOL_NAME or self.version != PROTOCOL_VERSION:
             raise ProtocolError("unsupported SBP protocol version")
-        object.__setattr__(self, "capabilities", tuple(self.capabilities))
+        caps = tuple(_require_string(c, "capability") for c in self.capabilities)
+        object.__setattr__(self, "capabilities", caps)
         if len(set(self.capabilities)) != len(self.capabilities):
             raise ProtocolError("capabilities must be unique")
         if tuple(sorted(self.capabilities)) != self.capabilities:
