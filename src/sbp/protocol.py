@@ -10,6 +10,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from cryptography.exceptions import InvalidSignature
 from sia.utils.canonical import canonical_bytes
 from sbp.object import ObjectEnvelope
 from sbp.root import RootAuthority
@@ -43,6 +44,7 @@ class CapabilityOffer:
         _require_string(self.peer_id, "peer_id")
         if self.protocol != PROTOCOL_NAME or self.version != PROTOCOL_VERSION:
             raise ProtocolError("unsupported SBP protocol version")
+        object.__setattr__(self, "capabilities", tuple(self.capabilities))
         if len(set(self.capabilities)) != len(self.capabilities):
             raise ProtocolError("capabilities must be unique")
         if tuple(sorted(self.capabilities)) != self.capabilities:
@@ -123,7 +125,7 @@ def verify_authority_exchange(record: AuthorityExchange) -> bool:
         key = Ed25519PublicKey.from_public_bytes(bytes.fromhex(record.signing_public_key))
         key.verify(bytes.fromhex(record.signature), canonical_bytes(record.signing_document()))
         return True
-    except (ValueError, TypeError):
+    except (InvalidSignature, ValueError, TypeError):
         return False
 
 
@@ -243,4 +245,7 @@ def resolve_replication_conflict(
     """Choose a stable winner without granting the replica authority."""
     if left.object_id != right.object_id or left.branch_id != right.branch_id:
         raise ProtocolError("replication conflict records must share object and branch")
-    return min((left, right), key=lambda record: (record.replica_id, record.to_dict().__repr__()))
+    return min(
+        (left, right),
+        key=lambda record: (record.replica_id, canonical_bytes(record.to_dict())),
+    )
