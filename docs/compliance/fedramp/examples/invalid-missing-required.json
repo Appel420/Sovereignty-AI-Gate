@@ -1,0 +1,9 @@
+{
+  "_comment": "INVALID example — missing required top-level fields: schemaCompatibility, packageId, packageTitle, disclaimer, contacts, controlMappings, artifactManifest.",
+  "serviceIdentification": {
+    "csoName": "GateOne",
+    "cspName": "Sovereignty-One",
+    "authorizationLevel": "Moderate",
+    "serviceType": "SaaS"
+  }
+}

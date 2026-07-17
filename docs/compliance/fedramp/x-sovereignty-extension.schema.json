@@ -1,0 +1,208 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sovereignty-ai-gate/schemas/fedramp/x-sovereignty-extension/v1.0.0",
+  "title": "x-sovereignty Extension",
+  "description": "Sovereignty AI governance extension namespace for FedRAMP package metadata. Carries authority-chain identifiers, Merkle-ledger references, SCAR audit chain linkage, ML-DSA (FIPS 204) attestation metadata, and evidence digests. This schema is a vendor extension; it does not alter or replace core FedRAMP schema requirements. The ML-DSA implementation reference is Appel420/sovereign-mldsa-native (portable C90 ML-DSA/FIPS 204 implementation). Schema fields capture attestation *references* and *metadata*; the schema itself does not perform any cryptographic operation.",
+  "type": "object",
+  "$defs": {
+    "mlDsaParameterSet": {
+      "title": "ML-DSA Parameter Set",
+      "description": "FIPS 204 (ML-DSA) parameter set identifier. ML-DSA-44 targets NIST security level 2; ML-DSA-65 targets security level 3; ML-DSA-87 targets security level 5.",
+      "type": "string",
+      "enum": ["ML-DSA-44", "ML-DSA-65", "ML-DSA-87"]
+    },
+    "mlDsaSignatureMaterial": {
+      "title": "ML-DSA Inline Signature Material",
+      "description": "Carries an ML-DSA signature value (FIPS 204) produced by sovereign-mldsa-native or a compatible implementation. Use this definition when the signature bytes are embedded directly in the document rather than referenced externally.",
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "inline-signature",
+          "description": "Discriminator: this object contains inline signature bytes."
+        },
+        "parameterSet": {
+          "$ref": "#/$defs/mlDsaParameterSet"
+        },
+        "signerPublicKeyId": {
+          "type": "string",
+          "description": "Identifier of the signer's public key (e.g. a key fingerprint or authority-assigned key ID).",
+          "minLength": 1
+        },
+        "signatureEncoding": {
+          "type": "string",
+          "description": "Encoding used for the signatureValue field.",
+          "enum": ["base64", "hex"]
+        },
+        "signatureValue": {
+          "type": "string",
+          "description": "Encoded ML-DSA signature bytes. Encoding is specified by signatureEncoding.",
+          "minLength": 1
+        },
+        "signedPayloadDigestAlgorithm": {
+          "type": "string",
+          "description": "Hash algorithm applied to the payload before signing.",
+          "enum": ["sha-256", "sha-384", "sha-512", "sha3-256", "sha3-512"]
+        },
+        "signedPayloadDigest": {
+          "type": "string",
+          "description": "Hex-encoded digest of the exact bytes that were signed.",
+          "pattern": "^[0-9a-f]{64,128}$"
+        },
+        "signedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 UTC timestamp when the signature was produced."
+        }
+      },
+      "required": [
+        "kind",
+        "parameterSet",
+        "signerPublicKeyId",
+        "signatureEncoding",
+        "signatureValue",
+        "signedPayloadDigestAlgorithm",
+        "signedPayloadDigest"
+      ]
+    },
+    "mlDsaAttestationReference": {
+      "title": "ML-DSA External Attestation Reference",
+      "description": "References an ML-DSA attestation artifact stored externally (e.g. in a SCAR ledger entry or attestation bundle). The signature bytes are NOT embedded here; this object records where to locate the signed attestation and how to verify it.",
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "attestation-reference",
+          "description": "Discriminator: this object is an external attestation reference, not inline signature bytes."
+        },
+        "parameterSet": {
+          "$ref": "#/$defs/mlDsaParameterSet"
+        },
+        "attestationBundleId": {
+          "type": "string",
+          "description": "Stable identifier for the attestation bundle or artifact (e.g. a SCAR ledger entry ID or archive filename).",
+          "minLength": 1
+        },
+        "attestationBundleUri": {
+          "type": "string",
+          "format": "uri",
+          "description": "Optional URI locating the attestation bundle (e.g. within an authenticated package repository)."
+        },
+        "bundleDigestAlgorithm": {
+          "type": "string",
+          "description": "Hash algorithm used to compute the digest of the referenced attestation bundle.",
+          "enum": ["sha-256", "sha-384", "sha-512", "sha3-256", "sha3-512"]
+        },
+        "bundleDigest": {
+          "type": "string",
+          "description": "Hex-encoded digest of the referenced attestation bundle for integrity verification.",
+          "pattern": "^[0-9a-f]{64,128}$"
+        },
+        "signerPublicKeyId": {
+          "type": "string",
+          "description": "Identifier of the signer's public key used to produce the attestation."
+        },
+        "issuedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 UTC timestamp when the attestation was issued."
+        }
+      },
+      "required": [
+        "kind",
+        "parameterSet",
+        "attestationBundleId",
+        "bundleDigestAlgorithm",
+        "bundleDigest"
+      ]
+    },
+    "mlDsaAttestation": {
+      "title": "ML-DSA Attestation",
+      "description": "Either inline signature material or a reference to an external attestation artifact. Use 'inline-signature' when embedding signature bytes directly; use 'attestation-reference' when pointing to an external bundle produced by sovereign-mldsa-native or equivalent.",
+      "oneOf": [
+        { "$ref": "#/$defs/mlDsaSignatureMaterial" },
+        { "$ref": "#/$defs/mlDsaAttestationReference" }
+      ]
+    },
+    "scarLedgerReference": {
+      "title": "SCAR Audit Ledger Reference",
+      "description": "Identifies a specific entry in the Sovereign Compliance Audit Record (SCAR) ledger, anchoring this package overview to an immutable, Merkle-chained audit trail.",
+      "type": "object",
+      "properties": {
+        "ledgerId": {
+          "type": "string",
+          "description": "Identifier of the SCAR ledger instance (e.g. a device-bound ledger ID).",
+          "minLength": 1
+        },
+        "entryId": {
+          "type": "string",
+          "description": "Unique identifier of the specific ledger entry.",
+          "minLength": 1
+        },
+        "entryDigestAlgorithm": {
+          "type": "string",
+          "enum": ["sha-256", "sha-384", "sha-512", "sha3-256", "sha3-512"]
+        },
+        "entryDigest": {
+          "type": "string",
+          "description": "Hex-encoded digest of the ledger entry payload for cross-reference integrity.",
+          "pattern": "^[0-9a-f]{64,128}$"
+        },
+        "sequenceNumber": {
+          "type": "integer",
+          "description": "Monotonic sequence number of the entry within the ledger.",
+          "minimum": 0
+        },
+        "committedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["ledgerId", "entryId", "entryDigestAlgorithm", "entryDigest"]
+    }
+  },
+  "properties": {
+    "authorityRoot": {
+      "type": "string",
+      "description": "Hex-encoded digest or opaque identifier representing the root-of-trust authority that governs this package. Corresponds to the sovereign authority established in sovereignty_core.",
+      "minLength": 1
+    },
+    "merkleRoot": {
+      "type": "string",
+      "description": "Hex-encoded Merkle root committing to the set of evidence artifacts included in this package. Computed by the SCAR audit chain or an equivalent Merkle accumulator.",
+      "pattern": "^[0-9a-f]{64,128}$"
+    },
+    "merkleRootAlgorithm": {
+      "type": "string",
+      "description": "Hash algorithm used to compute leaf hashes and internal nodes of the Merkle tree.",
+      "enum": ["sha-256", "sha-384", "sha-512", "sha3-256", "sha3-512", "blake3"]
+    },
+    "auditChainId": {
+      "type": "string",
+      "description": "Identifier of the sovereign audit chain (SCAR ledger) instance to which this package is anchored.",
+      "minLength": 1
+    },
+    "scarLedgerReference": {
+      "$ref": "#/$defs/scarLedgerReference"
+    },
+    "mlDsaAttestation": {
+      "$ref": "#/$defs/mlDsaAttestation",
+      "description": "ML-DSA (FIPS 204) attestation for this package overview, produced using sovereign-mldsa-native or a compatible FIPS 204 implementation. May be inline signature bytes or a reference to an external attestation bundle."
+    },
+    "authorityPolicyVersion": {
+      "type": "string",
+      "description": "Version identifier of the sovereign authority policy under which this package was evaluated (e.g. 'policy-v1.2.0').",
+      "pattern": "^policy-v\\d+\\.\\d+\\.\\d+$"
+    },
+    "evidenceDigest": {
+      "type": "string",
+      "description": "Prefixed hex-encoded digest over the canonical serialization of all evidence records (e.g. 'sha3-512:<hex>'). Provides a single integrity anchor for the full evidence set.",
+      "pattern": "^(sha-256|sha-384|sha-512|sha3-256|sha3-512|blake3):[0-9a-f]{64,128}$"
+    },
+    "implementationReference": {
+      "type": "string",
+      "description": "Source repository or artifact reference for the ML-DSA implementation used to produce attestations in this package.",
+      "const": "https://github.com/Appel420/sovereign-mldsa-native"
+    }
+  },
+  "required": ["authorityRoot", "auditChainId"],
+  "additionalProperties": false
+}
