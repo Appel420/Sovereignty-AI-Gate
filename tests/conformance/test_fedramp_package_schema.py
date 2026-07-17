@@ -192,7 +192,7 @@ def test_x_sovereignty_protocol_capabilities_validate() -> None:
     doc = _load_example("valid-with-sovereignty.json")
     protocol = doc["x-sovereignty"]["sovereigntyProtocol"]
     assert protocol["name"] == "SBP"
-    assert protocol["version"] == "1.0.0"
+    assert protocol["version"] == "0.2.0"
     _assert_valid(doc)
 
 
