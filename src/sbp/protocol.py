@@ -234,6 +234,8 @@ class ReplicationRecord:
             or not envelope.nonce_hex
         ):
             raise ProtocolError("replication requires an encrypted envelope")
+        _require_string(source_root_id, "source_root_id")
+        _require_string(replica_id, "replica_id")
         return cls(
             object_id=envelope.object_id,
             branch_id=envelope.branch_id,
