@@ -106,6 +106,8 @@ def create_authority_exchange(
     peer_id: str,
     capabilities: list[str],
 ) -> AuthorityExchange:
+    exchange_id = _require_string(exchange_id, "exchange_id")
+    peer_id = _require_string(peer_id, "peer_id")
     caps = tuple(sorted(set(_require_string(c, "capability") for c in capabilities)))
     record = AuthorityExchange(
         exchange_id=exchange_id,
@@ -115,7 +117,8 @@ def create_authority_exchange(
         capabilities=caps,
         signature="",
     )
-    return AuthorityExchange(**{**record.signing_document(), "signature": root.sign(canonical_bytes(record.signing_document()))})
+    signature = root.sign(canonical_bytes(record.signing_document()))
+    return AuthorityExchange(**{**record.signing_document(), "signature": signature})
 
 
 def verify_authority_exchange(record: AuthorityExchange) -> bool:
