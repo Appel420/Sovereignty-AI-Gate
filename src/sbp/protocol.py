@@ -281,7 +281,6 @@ def verify_delegation(
     if required_capability is not None and required_capability not in delegation.capabilities:
         return False
     return root.verify(canonical_bytes(delegation.signing_document()), delegation.signature)
-       d xv main
 
 
 @dataclass(frozen=True)
