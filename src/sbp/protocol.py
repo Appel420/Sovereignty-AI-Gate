@@ -230,7 +230,6 @@ def verify_delegation(
     required_capability: str | None = None,
     now: int | None = None,
 ) -> bool:
-     # copilot/add-fedramp-schema-support
     try:
         if delegation.grantor_id != root.metadata.root_id:
             return False
@@ -256,14 +255,6 @@ def verify_delegation(
         return root.verify(canonical_bytes(signing_doc), delegation.signature)
     except (ProtocolError, TypeError, ValueError):
         return False
-
-    if delegation.grantor_id != root.metadata.root_id:
-        return False
-    if delegation.expires_at is not None and now is not None and now >= delegation.expires_at:
-        return False
-    if required_capability is not None and required_capability not in delegation.capabilities:
-        return False
-    return root.verify(canonical_bytes(delegation.signing_document()), delegation.signature)
 
 
 @dataclass(frozen=True)
