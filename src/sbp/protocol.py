@@ -123,11 +123,22 @@ def create_authority_exchange(
 
 def verify_authority_exchange(record: AuthorityExchange) -> bool:
     """Verify the exchange signature using the advertised Ed25519 key."""
+    import hashlib
     from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
     try:
-        key = Ed25519PublicKey.from_public_bytes(bytes.fromhex(record.signing_public_key))
-        key.verify(bytes.fromhex(record.signature), canonical_bytes(record.signing_document()))
+        signing_key_bytes = bytes.fromhex(record.signing_public_key)
+        expected_root_id = hashlib.sha3_512(
+            b"SBP_ROOT_SIGNING_IDENTITY:" + signing_key_bytes
+        ).hexdigest()
+        if record.root_id != expected_root_id:
+            return False
+
+        key = Ed25519PublicKey.from_public_bytes(signing_key_bytes)
+        key.verify(
+            bytes.fromhex(record.signature),
+            canonical_bytes(record.signing_document()),
+        )
         return True
     except (InvalidSignature, ValueError, TypeError):
         return False
