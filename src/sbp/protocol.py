@@ -230,13 +230,31 @@ def verify_delegation(
     required_capability: str | None = None,
     now: int | None = None,
 ) -> bool:
-    if delegation.grantor_id != root.metadata.root_id:
+    try:
+        if delegation.grantor_id != root.metadata.root_id:
+            return False
+
+        caps = tuple(_require_string(c, "capability") for c in delegation.capabilities)
+        if len(set(caps)) != len(caps) or tuple(sorted(caps)) != caps:
+            return False
+
+        if delegation.expires_at is not None and now is not None and now >= delegation.expires_at:
+            return False
+        if required_capability is not None and required_capability not in caps:
+            return False
+
+        signing_doc = {
+            "version": delegation.version,
+            "delegation_id": _require_string(delegation.delegation_id, "delegation_id"),
+            "grantor_id": delegation.grantor_id,
+            "grantee_id": _require_string(delegation.grantee_id, "grantee_id"),
+            "branch_id": _require_string(delegation.branch_id, "branch_id"),
+            "capabilities": list(caps),
+            "expires_at": delegation.expires_at,
+        }
+        return root.verify(canonical_bytes(signing_doc), delegation.signature)
+    except (ProtocolError, TypeError, ValueError):
         return False
-    if delegation.expires_at is not None and now is not None and now >= delegation.expires_at:
-        return False
-    if required_capability is not None and required_capability not in delegation.capabilities:
-        return False
-    return root.verify(canonical_bytes(delegation.signing_document()), delegation.signature)
 
 
 @dataclass(frozen=True)
