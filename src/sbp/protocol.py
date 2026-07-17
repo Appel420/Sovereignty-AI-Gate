@@ -127,20 +127,36 @@ def verify_authority_exchange(record: AuthorityExchange) -> bool:
     from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
     try:
-        signing_key_bytes = bytes.fromhex(record.signing_public_key)
+        exchange_id = _require_string(record.exchange_id, "exchange_id")
+        peer_id = _require_string(record.peer_id, "peer_id")
+        root_id = _require_string(record.root_id, "root_id")
+        signing_public_key = _require_string(record.signing_public_key, "signing_public_key")
+        signature = _require_string(record.signature, "signature")
+
+        signing_key_bytes = bytes.fromhex(signing_public_key)
         expected_root_id = hashlib.sha3_512(
             b"SBP_ROOT_SIGNING_IDENTITY:" + signing_key_bytes
         ).hexdigest()
-        if record.root_id != expected_root_id:
+        if root_id != expected_root_id:
             return False
 
+        caps = tuple(_require_string(c, "capability") for c in record.capabilities)
+        if len(set(caps)) != len(caps) or tuple(sorted(caps)) != caps:
+            return False
+
+        signing_doc = {
+            "version": record.version,
+            "exchange_id": exchange_id,
+            "peer_id": peer_id,
+            "root_id": root_id,
+            "signing_public_key": signing_public_key,
+            "capabilities": list(caps),
+        }
+
         key = Ed25519PublicKey.from_public_bytes(signing_key_bytes)
-        key.verify(
-            bytes.fromhex(record.signature),
-            canonical_bytes(record.signing_document()),
-        )
+        key.verify(bytes.fromhex(signature), canonical_bytes(signing_doc))
         return True
-    except (InvalidSignature, ValueError, TypeError):
+    except (ProtocolError, InvalidSignature, ValueError, TypeError):
         return False
 
 
@@ -214,13 +230,31 @@ def verify_delegation(
     required_capability: str | None = None,
     now: int | None = None,
 ) -> bool:
-    if delegation.grantor_id != root.metadata.root_id:
+    try:
+        if delegation.grantor_id != root.metadata.root_id:
+            return False
+
+        caps = tuple(_require_string(c, "capability") for c in delegation.capabilities)
+        if len(set(caps)) != len(caps) or tuple(sorted(caps)) != caps:
+            return False
+
+        if delegation.expires_at is not None and now is not None and now >= delegation.expires_at:
+            return False
+        if required_capability is not None and required_capability not in caps:
+            return False
+
+        signing_doc = {
+            "version": delegation.version,
+            "delegation_id": _require_string(delegation.delegation_id, "delegation_id"),
+            "grantor_id": delegation.grantor_id,
+            "grantee_id": _require_string(delegation.grantee_id, "grantee_id"),
+            "branch_id": _require_string(delegation.branch_id, "branch_id"),
+            "capabilities": list(caps),
+            "expires_at": delegation.expires_at,
+        }
+        return root.verify(canonical_bytes(signing_doc), delegation.signature)
+    except (ProtocolError, TypeError, ValueError):
         return False
-    if delegation.expires_at is not None and now is not None and now >= delegation.expires_at:
-        return False
-    if required_capability is not None and required_capability not in delegation.capabilities:
-        return False
-    return root.verify(canonical_bytes(delegation.signing_document()), delegation.signature)
 
 
 @dataclass(frozen=True)

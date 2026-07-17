@@ -67,7 +67,11 @@ Invalid ciphertext metadata and mismatched identity fields fail closed.
 
 ## 3. Vector and versioning rules
 
+        # copilot/add-fedramp-schema-support
+Each vector is a JSON object whose top-level keys are contract-specific (commonly `inputs` and, where useful, `expected`).
+
 Each vector is a JSON object with `inputs` and, where useful, `expected`.
+        main
 Vector filenames identify the contract and must remain closed under the
 inventory assertion in `test_protocol_vectors.py`.  A wire-breaking change
 requires a new protocol version and new vector directory; a compatible
