@@ -137,6 +137,17 @@
       "implementation": "sovereign-mldsa-native",
       "version": "1.2.0",
       "implementationURI": "https://github.com/Appel420/sovereign-mldsa-native"
+    },
+    "sovereigntyProtocol": {
+      "name": "SBP",
+      "version": "1.0.0",
+      "capabilities": [
+        "authority-chain",
+        "branch-governance",
+        "scar-audit",
+        "mldsa-attestation",
+        "encrypted-replication"
+      ]
     }
   }
 }

@@ -189,3 +189,12 @@ Test coverage includes:
 - Conditional authenticated-repository validation (`authenticationRequired → authenticationMechanism`)
 - Digest algorithm and pattern validation (artifacts and manifest)
 - x-sovereignty field constraints (versioned authority, Merkle, audit-chain, and evidence digest metadata)
+### Protocol capability declaration
+
+The `sovereigntyProtocol` field declares the SBP protocol version and the
+capabilities supported by the producer. Consumers can use this metadata to
+negotiate interoperability across independent Python, Swift, Rust, or Go
+implementations without changing the core package schema.
+
+Supported capabilities are `authority-chain`, `branch-governance`, `scar-audit`,
+`mldsa-attestation`, and `encrypted-replication`.

@@ -187,6 +187,30 @@ def test_x_sovereignty_implementation_metadata_is_not_pinned() -> None:
     _assert_valid(doc)
 
 
+def test_x_sovereignty_protocol_capabilities_validate() -> None:
+    """The protocol declaration identifies SBP and supported capabilities."""
+    doc = _load_example("valid-with-sovereignty.json")
+    protocol = doc["x-sovereignty"]["sovereigntyProtocol"]
+    assert protocol["name"] == "SBP"
+    assert protocol["version"] == "1.0.0"
+    _assert_valid(doc)
+
+
+def test_x_sovereignty_protocol_capabilities_reject_duplicates() -> None:
+    """Capability negotiation metadata must not contain duplicate entries."""
+    doc = _load_example("valid-with-sovereignty.json")
+    capabilities = doc["x-sovereignty"]["sovereigntyProtocol"]["capabilities"]
+    capabilities.append(capabilities[0])
+    _assert_invalid(doc)
+
+
+def test_x_sovereignty_protocol_capabilities_reject_unknown_values() -> None:
+    """Unknown capability names must not silently claim interoperability."""
+    doc = _load_example("valid-with-sovereignty.json")
+    doc["x-sovereignty"]["sovereigntyProtocol"]["capabilities"] = ["future-capability"]
+    _assert_invalid(doc)
+
+
 # ---------------------------------------------------------------------------
 # Missing required fields
 # ---------------------------------------------------------------------------

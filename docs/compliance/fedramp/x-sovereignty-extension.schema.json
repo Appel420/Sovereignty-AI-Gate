@@ -182,6 +182,38 @@
       },
       "required": ["algorithm", "implementation", "version"],
       "additionalProperties": false
+    },
+    "sovereigntyProtocol": {
+      "title": "Sovereignty Protocol Capability Declaration",
+      "description": "Declares the SBP protocol version and capabilities supported by the producer, allowing independent implementations to negotiate interoperability.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "const": "SBP"
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "authority-chain",
+              "branch-governance",
+              "scar-audit",
+              "mldsa-attestation",
+              "encrypted-replication"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "required": ["name", "version", "capabilities"],
+      "additionalProperties": false
     }
   },
   "properties": {
@@ -270,6 +302,10 @@
     "mlDsaImplementation": {
       "$ref": "#/$defs/mlDsaImplementation",
       "description": "Algorithm, implementation, and version metadata for the ML-DSA attestation producer."
+    },
+    "sovereigntyProtocol": {
+      "$ref": "#/$defs/sovereigntyProtocol",
+      "description": "SBP protocol version and capabilities supported by the package producer."
     }
   },
   "required": [
@@ -280,7 +316,8 @@
     "auditLedgerVersion",
     "auditLedgerType",
     "anchorFrequency",
-    "checkpointId"
+    "checkpointId",
+    "sovereigntyProtocol"
   ],
   "allOf": [
     {
