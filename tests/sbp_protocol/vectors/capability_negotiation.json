@@ -1,0 +1,17 @@
+{
+  "local": {
+    "peer_id": "peer:local",
+    "protocol": "SBP",
+    "version": "0.2.0",
+    "capabilities": ["audit", "branch", "replication"],
+    "suite": "SBP-INTEROP-0.2/Ed25519-SHA3-512-AES-256-GCM"
+  },
+  "remote": {
+    "peer_id": "peer:remote",
+    "protocol": "SBP",
+    "version": "0.2.0",
+    "capabilities": ["audit", "delegation", "replication"],
+    "suite": "SBP-INTEROP-0.2/Ed25519-SHA3-512-AES-256-GCM"
+  },
+  "expected": {"intersection": ["audit", "replication"]}
+}

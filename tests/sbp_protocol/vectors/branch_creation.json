@@ -1,0 +1,12 @@
+{
+  "parent": {
+    "label": "main",
+    "capabilities": ["READ", "DELEGATE"],
+    "created_at": 1700000001
+  },
+  "child": {
+    "label": "research",
+    "capabilities": ["READ"],
+    "created_at": 1700000002
+  }
+}

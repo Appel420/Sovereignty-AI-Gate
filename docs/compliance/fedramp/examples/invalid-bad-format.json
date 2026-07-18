@@ -1,0 +1,48 @@
+{
+  "_comment": "INVALID example — present required fields but with format violations: invalid email, invalid enum for authorizationLevel, invalid digest pattern, invalid fedrampRevision enum.",
+  "schemaCompatibility": {
+    "schemaRevision": "1.0.0",
+    "fedrampRevision": "Rev99",
+    "nistRevision": "SP800-53r5"
+  },
+  "packageId": "pkg-bad",
+  "packageTitle": "Bad Package",
+  "disclaimer": "Not for use.",
+  "serviceIdentification": {
+    "csoName": "BadService",
+    "cspName": "BadProvider",
+    "authorizationLevel": "UltraHigh",
+    "serviceType": "SaaS"
+  },
+  "contacts": {
+    "authorizedOfficial": {
+      "name": "Someone",
+      "email": "not-an-email"
+    },
+    "informationSystemSecurityOfficer": {
+      "name": "ISSO",
+      "email": "isso@example.invalid"
+    }
+  },
+  "controlMappings": [
+    {
+      "control": "bad-control-format",
+      "implementationStatus": "Unknown Status"
+    }
+  ],
+  "artifactManifest": {
+    "manifestVersion": "1.0.0",
+    "artifacts": [
+      {
+        "artifactId": "ev-bad",
+        "filename": "evidence/bad.bin",
+        "digestAlgorithm": "md5",
+        "digest": "notahexdigest!!!"
+      }
+    ],
+    "cryptographicMetadata": {
+      "manifestDigestAlgorithm": "sha-384",
+      "manifestDigest": "not-a-valid-hex-digest"
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "inputs": {
+    "delegation_id": "delegation-0001",
+    "grantee_id": "peer:remote",
+    "branch_id": "branch:main",
+    "capabilities": ["READ"],
+    "parent_capabilities": ["READ", "WRITE"],
+    "expires_at": 200
+  }
+}

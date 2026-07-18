@@ -1,0 +1,8 @@
+{
+  "inputs": {
+    "exchange_id": "exchange-0001",
+    "peer_id": "peer:local",
+    "capabilities": ["audit", "replication"]
+  },
+  "expected": {"tampered_signature": "00"}
+}

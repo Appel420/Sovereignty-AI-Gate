@@ -30,6 +30,19 @@ from sbp.branch import Branch, BranchMetadata
 from sbp.object import ObjectManifest, ObjectEnvelope
 from sbp.audit import AuditEntry, AuditChain
 from sbp.codec import CodecError, encode_root, decode_root, encode_branch, decode_branch
+from sbp.protocol import (
+    AuthorityExchange,
+    CapabilityOffer,
+    Delegation,
+    ProtocolError,
+    ReplicationRecord,
+    create_authority_exchange,
+    create_delegation,
+    negotiate_capabilities,
+    resolve_replication_conflict,
+    verify_authority_exchange,
+    verify_delegation,
+)
 
 __all__ = [
     "AuditChain",
@@ -41,9 +54,20 @@ __all__ = [
     "ObjectManifest",
     "RootAuthority",
     "RootMetadata",
+    "AuthorityExchange",
+    "CapabilityOffer",
+    "Delegation",
+    "ProtocolError",
+    "ReplicationRecord",
+    "create_authority_exchange",
+    "create_delegation",
     "decode_branch",
     "decode_root",
     "encode_branch",
     "encode_root",
+    "negotiate_capabilities",
+    "resolve_replication_conflict",
+    "verify_authority_exchange",
+    "verify_delegation",
 ]
 __version__ = "0.1.0"

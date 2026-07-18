@@ -1,0 +1,442 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sovereignty-ai-gate/schemas/fedramp/fedramp-package-overview/v1.0.0",
+  "title": "FedRAMP Certification Package Overview",
+  "description": "JSON Schema for FedRAMP Certification Package Overview (FRC-CSO-PKG) metadata. Validates structural compliance with FedRAMP Rev. 5 / NIST SP 800-53 Rev. 5 package submission requirements. Validation against this schema does not constitute FedRAMP authorization or compliance certification.",
+  "type": "object",
+  "$defs": {
+    "schemaCompatibility": {
+      "title": "Schema Compatibility Metadata",
+      "description": "Version pins that identify which revision of this schema, the FedRAMP program baseline, and the underlying NIST control catalog this document targets.",
+      "type": "object",
+      "properties": {
+        "schemaRevision": {
+          "type": "string",
+          "description": "Semantic version of this JSON Schema document.",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "fedrampRevision": {
+          "type": "string",
+          "description": "FedRAMP program revision identifier (e.g. 'Rev5').",
+          "enum": ["Rev4", "Rev5"]
+        },
+        "nistRevision": {
+          "type": "string",
+          "description": "NIST SP 800-53 revision that the control catalog references (e.g. 'SP800-53r5').",
+          "enum": ["SP800-53r4", "SP800-53r5"]
+        }
+      },
+      "required": ["schemaRevision", "fedrampRevision", "nistRevision"]
+    },
+    "contact": {
+      "title": "Contact",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "title": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "phone": { "type": "string" },
+        "organization": { "type": "string" }
+      },
+      "required": ["name", "email"]
+    },
+    "evidenceRecord": {
+      "title": "Evidence Record",
+      "description": "A single auditable evidence artifact associated with a control or package section.",
+      "type": "object",
+      "properties": {
+        "documentId": {
+          "type": "string",
+          "description": "Unique identifier for this evidence artifact within the package.",
+          "minLength": 1
+        },
+        "title": { "type": "string" },
+        "mediaType": {
+          "type": "string",
+          "description": "IANA media type (e.g. 'application/pdf', 'text/plain')."
+        },
+        "classification": {
+          "type": "string",
+          "description": "Data classification label (e.g. 'CUI', 'Unclassified').",
+          "enum": ["Unclassified", "CUI", "CUI//SP-CTI", "Sensitive"]
+        },
+        "digestAlgorithm": {
+          "type": "string",
+          "description": "Hash algorithm used to compute the digest value.",
+          "enum": ["sha-256", "sha-384", "sha-512", "sha3-256", "sha3-512"]
+        },
+        "digest": {
+          "type": "string",
+          "description": "Hex-encoded digest of the artifact content.",
+          "pattern": "^[0-9a-f]{64,128}$"
+        },
+        "signed": {
+          "type": "boolean",
+          "description": "Whether this artifact carries a cryptographic signature."
+        },
+        "uri": {
+          "type": "string",
+          "format": "uri",
+          "description": "Optional URI locating the artifact (e.g. relative path within the package or an authenticated repository URL)."
+        }
+      },
+      "required": ["documentId", "digestAlgorithm", "digest"]
+    },
+    "controlMapping": {
+      "title": "NIST 800-53 Control Mapping",
+      "description": "Maps a specific NIST SP 800-53 control to its implementation status and supporting evidence.",
+      "type": "object",
+      "properties": {
+        "control": {
+          "type": "string",
+          "description": "NIST SP 800-53 control identifier (e.g. 'AC-2', 'AU-9').",
+          "pattern": "^[A-Z]{2}-\\d+(\\(\\d+\\))?$"
+        },
+        "controlFamily": {
+          "type": "string",
+          "description": "Human-readable control family name."
+        },
+        "implementationStatus": {
+          "type": "string",
+          "enum": [
+            "Implemented",
+            "Partially Implemented",
+            "Planned",
+            "Alternative Implementation",
+            "Not Applicable"
+          ]
+        },
+        "responsibleRole": {
+          "type": "string",
+          "description": "Role or team accountable for implementing this control."
+        },
+        "evidence": {
+          "type": "array",
+          "description": "List of documentId references from the package artifact manifest.",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        },
+        "remarks": { "type": "string" }
+      },
+      "required": ["control", "implementationStatus"]
+    },
+    "artifactEntry": {
+      "title": "Package Artifact Entry",
+      "description": "An entry in the package artifact manifest recording a file's identity and integrity digest.",
+      "type": "object",
+      "properties": {
+        "artifactId": {
+          "type": "string",
+          "description": "Stable identifier for this artifact (matches documentId in evidence records when applicable).",
+          "minLength": 1
+        },
+        "filename": {
+          "type": "string",
+          "description": "Relative path or filename of the artifact within the package archive.",
+          "minLength": 1
+        },
+        "mediaType": { "type": "string" },
+        "digestAlgorithm": {
+          "type": "string",
+          "enum": ["sha-256", "sha-384", "sha-512", "sha3-256", "sha3-512"]
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64,128}$"
+        },
+        "sizeBytes": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": ["artifactId", "filename", "digestAlgorithm", "digest"]
+    },
+    "cryptographicMetadata": {
+      "title": "Package-Level Cryptographic Metadata",
+      "description": "Integrity and signature metadata for the overall certification package.",
+      "type": "object",
+      "properties": {
+        "manifestDigestAlgorithm": {
+          "type": "string",
+          "description": "Hash algorithm used to compute the overall manifest digest.",
+          "enum": ["sha-256", "sha-384", "sha-512", "sha3-256", "sha3-512"]
+        },
+        "manifestDigest": {
+          "type": "string",
+          "description": "Hex-encoded digest over the canonical serialization of the artifact manifest.",
+          "pattern": "^[0-9a-f]{64,128}$"
+        },
+        "signatureAlgorithm": {
+          "type": "string",
+          "description": "Algorithm used to sign the manifest digest (e.g. 'RSA-PSS-SHA384', 'ECDSA-P384', 'ML-DSA-65').",
+          "enum": [
+            "RSA-PSS-SHA256",
+            "RSA-PSS-SHA384",
+            "RSA-PSS-SHA512",
+            "ECDSA-P256-SHA256",
+            "ECDSA-P384-SHA384",
+            "ML-DSA-44",
+            "ML-DSA-65",
+            "ML-DSA-87"
+          ]
+        },
+        "signingCertificateId": {
+          "type": "string",
+          "description": "Identifier (serial number, SKI, or thumbprint) of the signing certificate."
+        },
+        "timestampAuthority": {
+          "type": "string",
+          "description": "URI or name of the RFC 3161 timestamp authority used during signing.",
+          "format": "uri"
+        },
+        "signedAt": {
+          "type": "string",
+          "description": "ISO 8601 UTC timestamp when the manifest signature was produced.",
+          "format": "date-time"
+        }
+      },
+      "required": ["manifestDigestAlgorithm", "manifestDigest"]
+    },
+    "assessor": {
+      "title": "Third-Party Assessor Organization (3PAO)",
+      "type": "object",
+      "properties": {
+        "organizationName": { "type": "string", "minLength": 1 },
+        "a2laAccreditationId": {
+          "type": "string",
+          "description": "A2LA accreditation certificate number (format: nnnn.nn).",
+          "pattern": "^\\d{4}\\.\\d{2}$"
+        },
+        "assessmentLeadContact": { "$ref": "#/$defs/contact" },
+        "assessmentPeriodStart": {
+          "type": "string",
+          "format": "date"
+        },
+        "assessmentPeriodEnd": {
+          "type": "string",
+          "format": "date"
+        }
+      },
+      "required": ["organizationName", "assessmentLeadContact"]
+    },
+    "repository": {
+      "title": "Authenticated Repository Reference",
+      "description": "A reference to an authenticated source code or artifact repository.",
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["git", "svn", "artifact-registry"]
+        },
+        "uri": {
+          "type": "string",
+          "format": "uri"
+        },
+        "branch": { "type": "string" },
+        "commitRef": { "type": "string" },
+        "authenticationRequired": {
+          "type": "boolean"
+        },
+        "authenticationMechanism": {
+          "type": "string",
+          "description": "Required when authenticationRequired is true.",
+          "enum": ["mTLS", "OAuth2", "OIDC", "APIKey", "SovereignAuthority"]
+        }
+      },
+      "required": ["type", "uri", "authenticationRequired"],
+      "if": {
+        "properties": { "authenticationRequired": { "const": true } }
+      },
+      "then": {
+        "required": ["authenticationMechanism"]
+      }
+    }
+  },
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "format": "uri"
+    },
+    "schemaCompatibility": {
+      "$ref": "#/$defs/schemaCompatibility"
+    },
+    "packageId": {
+      "type": "string",
+      "description": "Globally unique identifier for this FedRAMP authorization package (e.g. a UUID or agency-assigned identifier).",
+      "minLength": 1
+    },
+    "packageTitle": {
+      "type": "string",
+      "description": "Human-readable title of this certification package.",
+      "minLength": 1
+    },
+    "createdAt": {
+      "type": "string",
+      "description": "ISO 8601 UTC creation timestamp for this package overview document.",
+      "format": "date-time"
+    },
+    "lastModifiedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "disclaimer": {
+      "type": "string",
+      "description": "Required disclaimer clarifying that schema validation does not constitute FedRAMP authorization."
+    },
+    "serviceIdentification": {
+      "type": "object",
+      "description": "Cloud Service Offering (CSO) identification block.",
+      "properties": {
+        "csoName": {
+          "type": "string",
+          "description": "Official FedRAMP CSO name.",
+          "minLength": 1
+        },
+        "csoId": {
+          "type": "string",
+          "description": "FedRAMP-assigned CSO identifier."
+        },
+        "cspName": {
+          "type": "string",
+          "description": "Cloud Service Provider (CSP) legal entity name.",
+          "minLength": 1
+        },
+        "authorizationLevel": {
+          "type": "string",
+          "description": "FedRAMP impact level.",
+          "enum": ["Low", "Moderate", "High", "LI-SaaS"]
+        },
+        "serviceType": {
+          "type": "string",
+          "description": "NIST cloud deployment model.",
+          "enum": ["SaaS", "PaaS", "IaaS", "Hybrid"]
+        },
+        "deploymentModel": {
+          "type": "string",
+          "enum": ["Public", "Private", "Community", "Government-Only"]
+        },
+        "operationalStatus": {
+          "type": "string",
+          "enum": ["In Development", "Operational", "Major Modification", "Decommissioned"]
+        }
+      },
+      "required": ["csoName", "cspName", "authorizationLevel", "serviceType"]
+    },
+    "contacts": {
+      "type": "object",
+      "description": "Key personnel contacts for the authorization package.",
+      "properties": {
+        "authorizedOfficial": { "$ref": "#/$defs/contact" },
+        "informationSystemSecurityOfficer": { "$ref": "#/$defs/contact" },
+        "systemOwner": { "$ref": "#/$defs/contact" },
+        "privacyOfficer": { "$ref": "#/$defs/contact" }
+      },
+      "required": ["authorizedOfficial", "informationSystemSecurityOfficer"]
+    },
+    "assessor": { "$ref": "#/$defs/assessor" },
+    "authorizationBoundary": {
+      "type": "object",
+      "description": "Describes the authorization boundary scope.",
+      "properties": {
+        "description": { "type": "string", "minLength": 1 },
+        "authorizationBoundaryDiagramUri": {
+          "type": "string",
+          "format": "uri"
+        },
+        "dataFlowDiagramUri": {
+          "type": "string",
+          "format": "uri"
+        },
+        "networkArchitectureDiagramUri": {
+          "type": "string",
+          "format": "uri"
+        },
+        "excludedComponents": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "required": ["description"]
+    },
+    "certifiedServices": {
+      "type": "array",
+      "description": "List of services included within the authorization boundary.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "serviceId": { "type": "string", "minLength": 1 },
+          "serviceName": { "type": "string", "minLength": 1 },
+          "description": { "type": "string" },
+          "inheritedControls": {
+            "type": "array",
+            "description": "List of control identifiers inherited from a FedRAMP-authorized platform.",
+            "items": { "type": "string", "pattern": "^[A-Z]{2}-\\d+(\\(\\d+\\))?$" }
+          }
+        },
+        "required": ["serviceId", "serviceName"]
+      }
+    },
+    "thirdPartyResources": {
+      "type": "array",
+      "description": "External services and resources leveraged by the CSO that are outside the authorization boundary.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "resourceId": { "type": "string", "minLength": 1 },
+          "resourceName": { "type": "string", "minLength": 1 },
+          "provider": { "type": "string" },
+          "fedrampAuthorized": { "type": "boolean" },
+          "authorizationPackageId": { "type": "string" },
+          "dataClassification": { "type": "string" },
+          "accessType": { "type": "string" }
+        },
+        "required": ["resourceId", "resourceName", "fedrampAuthorized"]
+      }
+    },
+    "controlMappings": {
+      "type": "array",
+      "description": "NIST SP 800-53 control implementation statements with associated evidence references.",
+      "items": { "$ref": "#/$defs/controlMapping" },
+      "minItems": 1
+    },
+    "artifactManifest": {
+      "type": "object",
+      "description": "Inventory of all artifacts included in the certification package with per-artifact integrity digests.",
+      "properties": {
+        "manifestVersion": {
+          "type": "string",
+          "description": "Version identifier for the manifest format.",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "artifacts": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/artifactEntry" },
+          "minItems": 1
+        },
+        "cryptographicMetadata": { "$ref": "#/$defs/cryptographicMetadata" }
+      },
+      "required": ["manifestVersion", "artifacts", "cryptographicMetadata"]
+    },
+    "repositories": {
+      "type": "array",
+      "description": "Source code and artifact repositories associated with the CSO.",
+      "items": { "$ref": "#/$defs/repository" }
+    },
+    "x-sovereignty": {
+      "type": "object",
+      "description": "Sovereignty AI governance extension. Contains authority-chain, Merkle-ledger, and ML-DSA attestation metadata. This is a vendor extension namespace and does not alter core FedRAMP schema requirements.",
+      "$ref": "https://sovereignty-ai-gate/schemas/fedramp/x-sovereignty-extension/v1.1.0"
+    }
+  },
+  "required": [
+    "schemaCompatibility",
+    "packageId",
+    "packageTitle",
+    "disclaimer",
+    "serviceIdentification",
+    "contacts",
+    "controlMappings",
+    "artifactManifest"
+  ],
+  "additionalProperties": false
+}

@@ -11,10 +11,7 @@ This is the main dedicated branch. All changes by Claude Grok/Ara GPT/Codex Copi
 - [Architecture and protocol documentation](#architecture-and-protocol-documentation)
 - [Development workflow](#development-workflow)
 - [Policy and contribution requirements](#provider-and-platform-policy)
-        copilot/sovereign-ai-gate
 - [FedRAMP Phase 4 hardening (internal evidence phase)](#fedramp-phase-4-hardening-internal-evidence-phase)
-
-        main
 
 ## Provider policy
 
@@ -181,7 +178,6 @@ Read these documents by purpose rather than treating the repository as a single 
 5. Review the relevant architecture and RFC documents when a change affects authority semantics.
 6. Follow the branch and pull-request rules above before sharing work.
 
-        copilot/sovereign-ai-gate
 ## FedRAMP Phase 4 Hardening (Internal Evidence Phase)
 
 This branch includes FedRAMP Rev. 5 Phase 4 internal hardening work focused on evidence-readiness and repeatable controls verification:
@@ -204,7 +200,6 @@ The phase keeps core workflows offline-first and records optional cloud integrat
 This repository's FedRAMP Phase 4 work is an internal FedRAMP Rev. 5 evidence-readiness and cloud/dependency-hardening phase. It is not a FedRAMP authorization or certification claim.
 
 The phase keeps the core workflow offline-first and records optional cloud integrations, CI dependencies, deployment boundaries, and their evidence sources in:
-        main
 
 - [`cloud_dependency_inventory.json`](docs/compliance/fedramp_phase4/cloud_dependency_inventory.json) — machine-readable dependency and trust-boundary inventory.
 - [`control_evidence_matrix.md`](docs/compliance/fedramp_phase4/control_evidence_matrix.md) — internal mapping to NIST SP 800-53 control families.
@@ -212,7 +207,6 @@ The phase keeps the core workflow offline-first and records optional cloud integ
 - [`security_decision_record_index.md`](docs/compliance/fedramp_phase4/security_decision_record_index.md) — security decisions and supporting evidence.
 - [`sbom.json`](docs/compliance/fedramp_phase4/sbom.json) — reproducible software bill of materials.
 
-        copilot/sovereign-ai-gate
 ### Verification
 
 Run:
@@ -223,6 +217,7 @@ python scripts/generate_sbom.py --check docs/compliance/fedramp_phase4/sbom.json
 python scripts/validate_cloud_config.py
 pytest
 npm test
+```
 
 Run the phase-specific checks locally:
 
@@ -230,5 +225,93 @@ Run the phase-specific checks locally:
 python scripts/check_dependency_policy.py
 python scripts/validate_cloud_config.py
 python scripts/generate_sbom.py --check docs/compliance/fedramp_phase4/sbom.json
-        main
 ```
+
+---
+
+## What's New — FedRAMP Schema Support & SBP v0.2
+
+This section documents the improvements added in the `copilot/add-fedramp-schema-support` branch.
+
+### FedRAMP Package Overview Schema (`docs/compliance/fedramp/`)
+
+Two JSON Schema Draft 2020-12 definitions were added to support FedRAMP evidence automation:
+
+| File | Purpose |
+|------|---------|
+| `fedramp-package-overview.schema.json` | Core FedRAMP Certification Package Overview metadata (FRC-CSO-PKG) |
+| `x-sovereignty-extension.schema.json` | `x-sovereignty` extension namespace for authority-chain, Merkle-ledger, and ML-DSA attestation metadata (v1.1.0) |
+| `SCHEMA_LAYERING.md` | Layering guide: how the core FedRAMP schema and the `x-sovereignty` extension relate, plus NIST SP 800-53 Rev. 5 control mapping and ML-DSA attestation examples |
+
+The `x-sovereignty` extension (v1.1.0) declares:
+
+- **Versioned authority**: `authorityId`, `authorityVersion`, `authorityFingerprint`, `authorityPolicyVersion`, `evidenceDigest`
+- **Merkle evidence**: `merkleRoot`, `merkleRootAlgorithm`, `merkleTreeFormat`, `canonicalizationVersion`, `leafHashAlgorithm`
+- **SCAR audit chain**: `auditChainId`, `scarLedgerReference`
+- **ML-DSA attestation**: inline signature or external attestation-bundle reference (supports `ML-DSA-44`, `ML-DSA-65`, `ML-DSA-87`)
+- **SBP capability negotiation**: `sovereigntyProtocol` block declaring SBP name, semantic version, and supported capabilities
+
+Validation note: these schemas are internal evidence-readiness tools. They do **not** claim FedRAMP authorization, ATO, or certification.
+
+Example documents:
+
+| File | Description |
+|------|-------------|
+| `examples/valid-core-package.json` | Minimum valid core package (no x-sovereignty) |
+| `examples/valid-with-sovereignty.json` | Full package with x-sovereignty and ML-DSA attestation reference |
+| `examples/invalid-missing-required.json` | Expected-to-fail: missing required top-level fields |
+| `examples/invalid-bad-format.json` | Expected-to-fail: invalid enum/format values |
+
+### SBP v0.2 Protocol Contracts (`src/sbp/protocol.py`)
+
+The Sovereignty Boundary Protocol (SBP) v0.2 offline contract layer was added. All contracts are transport-independent and offline-first.
+
+Algorithm suite: `SBP-INTEROP-0.2/Ed25519-SHA3-512-AES-256-GCM`
+
+| Primitive | Description |
+|-----------|-------------|
+| `CapabilityOffer` | Peer-to-peer capability advertisement and negotiation |
+| `AuthorityExchange` | Binds peer identity to an Ed25519 public root key |
+| `Delegation` | Root-signed, capability-scoped, subset-enforced grant with optional expiry |
+| `ReplicationRecord` | Encrypted `ObjectEnvelope` synchronization record (backup/sync only, no authority transfer) |
+| `negotiate_capabilities` | Fail-closed intersection of two `CapabilityOffer` sets |
+| `verify_authority_exchange` | Verifies an `AuthorityExchange` against its root signature |
+| `verify_delegation` | Verifies a `Delegation` against the issuing root signature, optional expiry, and required capability |
+| `resolve_replication_conflict` | Deterministic conflict resolution for concurrent replication records |
+
+### SBP v0.2 Conformance Vectors (`tests/sbp_protocol/`)
+
+Executable vector conformance suite implementing RFC-SBP-0006:
+
+- Normative JSON vectors in `tests/sbp_protocol/vectors/` (capability negotiation, authority exchange, delegation, branch creation, audit events, replication)
+- Vectors contain no private keys and are fully reproducible offline
+- Conformance RFC: `docs/rfc/RFC-SBP-0006-Protocol-Conformance.md`
+
+### Schema Conformance Tests (`tests/conformance/test_fedramp_package_schema.py`)
+
+pytest suite covering:
+
+- Valid core and valid x-sovereignty documents
+- All ML-DSA FIPS 204 parameter sets (`ML-DSA-44`, `ML-DSA-65`, `ML-DSA-87`)
+- Both attestation discriminator kinds (`inline-signature`, `attestation-reference`)
+- Missing required fields and invalid enum/format values
+- Conditional validation (`authenticationRequired → authenticationMechanism`)
+- Digest algorithm and pattern validation
+- x-sovereignty field constraints
+
+Run schema conformance tests:
+
+```bash
+python3 -m pytest tests/conformance/test_fedramp_package_schema.py -v
+python3 -m pytest tests/sbp_protocol/ -v
+```
+
+### Repository map additions
+
+| Location | What it contains |
+|----------|-----------------|
+| `docs/compliance/fedramp/` | FedRAMP Package Overview and x-sovereignty extension schemas, layering guide, and example documents |
+| `docs/rfc/RFC-SBP-0006-Protocol-Conformance.md` | Normative SBP v0.2 protocol conformance RFC |
+| `src/sbp/protocol.py` | SBP v0.2 transport-independent protocol contracts |
+| `tests/sbp_protocol/` | SBP v0.2 vector conformance suite |
+| `tests/conformance/test_fedramp_package_schema.py` | JSON schema validation tests for FedRAMP and x-sovereignty artifacts |
