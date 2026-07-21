@@ -121,6 +121,58 @@ Identity, authority, storage, sync, execution, and provider integrations SHALL r
 
 Replacing one component SHALL NOT require replacing another.
 
+### SBP-A11 — Provider Independence
+
+**Objective:** Preserve protocol interoperability and implementation portability.
+
+Core protocol operations MUST NOT require any specific external AI provider, cloud service, identity provider, or compute vendor.
+
+Provider integrations MUST be implemented as replaceable adapters behind a stable interface.
+
+Canonical SBP objects MUST NOT contain provider-specific fields.
+
+Implementations MAY include provider metadata outside canonical protocol objects provided it does not affect protocol semantics.
+
+### SBP-A12 — Explicit Egress Governance
+
+**Objective:** Make all external communication intentional and auditable.
+
+Network egress MUST be denied by default.
+
+External requests MUST require explicit authorization through implementation policy.
+
+Every authorized external request MUST generate an auditable event.
+
+Implementations SHOULD identify the destination, purpose, timestamp, and requesting component for each authorized egress event.
+
+### SBP-A13 — Local Authority
+
+**Objective:** Define the authoritative state.
+
+Local persistent state MUST be the authoritative state for protocol operation.
+
+External services MAY provide computation, synchronization, or replication.
+
+External services MUST NOT become the authoritative source for protocol state unless explicitly defined by a separate deployment profile.
+
+Loss of external connectivity MUST NOT invalidate locally committed protocol state.
+
+### SBP-A14 — Portable Data
+
+Export formats MUST be publicly documented.
+
+Export formats MUST be verifiable.
+
+Export formats SHOULD remain independent of any single provider or implementation.
+
+### SBP-A15 — Transparent External Dependencies
+
+All configured external endpoints MUST be discoverable through implementation configuration.
+
+Hidden or undocumented network destinations MUST NOT be required for compliant implementations.
+
+Implementations SHOULD expose an audit mechanism that identifies external destinations contacted during protocol execution.
+
 ---
 
 ## 6. Terminology
