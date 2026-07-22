@@ -1,5 +1,9 @@
 """
 RFC-0019: Import bundle conformance tests.
+
+Phase 1 extends the existing conformance suite with focused integrity tests.
+The tests use the repository's real import validator, loader, hashing, and
+SCAR Merkle implementation. They do not introduce a parallel import path.
 """
 import json
 from pathlib import Path
@@ -12,6 +16,11 @@ from sia.imports.loader import BundleLoader
 from sia.errors import codes
 from sia.errors.exceptions import ImportError as SIAImportError
 from sia.utils.hashing import hash_object
+from sovereignty_core.audit.merkle import (
+    build_merkle_from_scarlog,
+    generate_proof,
+    verify_merkle_proof,
+)
 
 FIXTURES = Path(__file__).parent.parent / "fixtures"
 
@@ -101,3 +110,54 @@ def test_import_loader_list():
         )
         loader.load(bundle)
     assert len(loader.list_bundles()) == 3
+
+
+def _import_records() -> list[dict[str, object]]:
+    """Return deterministic record fixtures for Merkle-only evidence tests."""
+    return [
+        {
+            "sequence": 0,
+            "event": "IDENTITY_CREATED",
+            "payload_hash": "a" * 128,
+        },
+        {
+            "sequence": 1,
+            "event": "BOUNDARY_REGISTERED",
+            "payload_hash": "b" * 128,
+        },
+        {
+            "sequence": 2,
+            "event": "DELEGATION_ISSUED",
+            "payload_hash": "c" * 128,
+        },
+    ]
+
+
+def test_import_records_have_verifiable_merkle_inclusion_proof():
+    """Imported records can be independently checked as ordered evidence."""
+    records = _import_records()
+    tree = build_merkle_from_scarlog(records)
+    proof = generate_proof(tree, 1)
+
+    assert tree.root
+    assert proof.leaf_hash == tree.leaves[1]
+    assert verify_merkle_proof(proof) is True
+
+
+def test_import_merkle_proof_rejects_tampered_leaf():
+    records = _import_records()
+    tree = build_merkle_from_scarlog(records)
+    proof = generate_proof(tree, 1)
+    proof.leaf_hash = "f" * 128
+
+    assert verify_merkle_proof(proof) is False
+
+
+def test_import_record_order_is_bound_to_merkle_root():
+    records = _import_records()
+    reordered = [records[1], records[0], records[2]]
+
+    original_root = build_merkle_from_scarlog(records).root
+    reordered_root = build_merkle_from_scarlog(reordered).root
+
+    assert original_root != reordered_root
