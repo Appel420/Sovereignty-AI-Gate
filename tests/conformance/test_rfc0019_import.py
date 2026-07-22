@@ -148,9 +148,13 @@ def test_import_merkle_proof_rejects_tampered_leaf():
     records = _import_records()
     tree = build_merkle_from_scarlog(records)
     proof = generate_proof(tree, 1)
-    proof.leaf_hash = "f" * 128
+    tampered_proof = type(proof)(
+        leaf_hash="f" * 128,
+        siblings=proof.siblings,
+        root=proof.root,
+    )
 
-    assert verify_merkle_proof(proof) is False
+    assert verify_merkle_proof(tampered_proof) is False
 
 
 def test_import_record_order_is_bound_to_merkle_root():
