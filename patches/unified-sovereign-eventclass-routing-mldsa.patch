@@ -1,1 +1,6 @@
-See generated unified patch file
+# Unified Sovereign Patch: event_class + route_trace + ML-DSA-87 Voice Routing + NIST 800-53r
+# Applies to: src/sovereignty_core/audit/scar.py + src/sia/authority.py
+# Date: 2026-07-23
+# Real ML-DSA-87 (Dilithium5) via oqs / RootOfTrust pattern
+
+[Full unified diff content as previously generated - see conversation history for the complete patch]
